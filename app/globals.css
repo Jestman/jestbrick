@@ -1,0 +1,258 @@
+/* JestBrick tasarım token'ları — prototipten taşındı. */
+:root {
+  --yellow: #f5c518;
+  --yellow-d: #e0b00a;
+  --yellow-soft: #fff7dc;
+  --red: #d6402b;
+  --ink: #20232e;
+  --ink2: #5a6072;
+  --ink3: #8b90a0;
+  --bg: #edeff2;
+  --card: #ffffff;
+  --line: #e2e5ea;
+  --soft: #f5f6f8;
+  --green: #2f9e63;
+  --blue: #2e5aac;
+  --disp: "Futura", "Avenir Next", "Trebuchet MS", sans-serif;
+  --r: 14px;
+  --shadow: 0 1px 2px rgba(32, 35, 46, 0.06), 0 4px 16px rgba(32, 35, 46, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+a {
+  color: var(--blue);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+}
+::placeholder {
+  color: var(--ink3);
+}
+
+/* ---- ortak bileşen sınıfları ---- */
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--disp);
+  font-weight: 800;
+  font-size: 21px;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+}
+.logo b {
+  color: var(--red);
+}
+.topbar nav {
+  margin-left: auto;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.topbar nav a {
+  color: var(--ink2);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 9px;
+}
+.topbar nav a:hover {
+  background: var(--soft);
+  text-decoration: none;
+  color: var(--ink);
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 20px 22px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 14px;
+  border: none;
+}
+.btn-y {
+  background: var(--yellow);
+  color: var(--ink);
+}
+.btn-y:hover {
+  background: var(--yellow-d);
+}
+.btn-o {
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  color: var(--ink);
+}
+
+.field {
+  margin-bottom: 14px;
+}
+.field label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink2);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.field input {
+  width: 100%;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 13px;
+  outline: none;
+  background: #fff;
+}
+.field input:focus {
+  border-color: var(--yellow-d);
+}
+
+.error {
+  background: #fbeae7;
+  color: var(--red);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.setgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.setcard {
+  background: var(--card);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: block;
+  color: inherit;
+}
+.setcard:hover {
+  text-decoration: none;
+  outline: 2px solid var(--yellow);
+}
+.setcard .img {
+  height: 140px;
+  background: var(--soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.setcard .img img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 10px;
+}
+.setcard .meta {
+  padding: 12px 14px;
+}
+.setcard .meta b {
+  font-size: 14px;
+  display: block;
+  line-height: 1.3;
+}
+.setcard .meta small {
+  color: var(--ink3);
+  font-size: 12px;
+}
+
+h1.page {
+  font-family: var(--disp);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  margin-bottom: 18px;
+}
+
+.searchbar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.searchbar input {
+  flex: 1;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 99px;
+  padding: 11px 18px;
+  outline: none;
+  font-size: 15px;
+}
+.searchbar input:focus {
+  border-color: var(--yellow-d);
+}
+
+.notice {
+  background: var(--yellow-soft);
+  border: 1px dashed var(--yellow-d);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 14px;
+  color: var(--ink2);
+}
+.notice code {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-size: 0.85em;
+}
