@@ -310,6 +310,19 @@ drop policy if exists notifications_own_update on public.notifications;
 create policy notifications_own_update on public.notifications for update
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ============ Realtime yayını (DM ve bildirimler canlı düşsün) ============
+do $$
+begin
+  if not exists (select 1 from pg_publication_tables
+                 where pubname = 'supabase_realtime' and tablename = 'messages') then
+    alter publication supabase_realtime add table public.messages;
+  end if;
+  if not exists (select 1 from pg_publication_tables
+                 where pubname = 'supabase_realtime' and tablename = 'notifications') then
+    alter publication supabase_realtime add table public.notifications;
+  end if;
+end $$;
+
 -- ============ başlangıç verisi: forum kategorileri ============
 insert into public.forum_categories (id, name, slug, icon, description, position) values
   (1, 'Yeni Setler & Söylentiler', 'yeni-setler', '🆕', 'Duyurular, sızıntılar, beklenen setler', 1),

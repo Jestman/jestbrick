@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { and, count, eq, isNull } from "drizzle-orm";
 import "./globals.css";
 import { getUser } from "@/lib/supabase/server";
-import { envReady } from "@/db";
+import { db, envReady, schema } from "@/db";
 import { signOut } from "@/lib/auth/actions";
+import { unreadConversationCount } from "@/lib/messages/helpers";
 
 export const metadata: Metadata = {
   title: { default: "JestBrick — LEGO Koleksiyoncu Ağı", template: "%s · JestBrick" },
@@ -28,6 +30,22 @@ function Brand() {
   );
 }
 
+function NavBadge({ n }: { n: number }) {
+  if (n <= 0) return null;
+  return (
+    <span
+      style={{
+        background: "var(--red)", color: "#fff", fontSize: 10, fontWeight: 800,
+        minWidth: 16, height: 16, borderRadius: 8, display: "inline-flex",
+        alignItems: "center", justifyContent: "center", padding: "0 4px",
+        marginLeft: 4, verticalAlign: "2px",
+      }}
+    >
+      {n > 9 ? "9+" : n}
+    </span>
+  );
+}
+
 async function AuthNav() {
   if (!envReady()) return null;
   const user = await getUser();
@@ -41,9 +59,26 @@ async function AuthNav() {
       </>
     );
   }
+
+  const [unreadMsgs, [{ unreadNotifs }]] = await Promise.all([
+    unreadConversationCount(user.id),
+    db()
+      .select({ unreadNotifs: count() })
+      .from(schema.notifications)
+      .where(and(eq(schema.notifications.userId, user.id), isNull(schema.notifications.readAt))),
+  ]);
+
   return (
     <>
       <Link href="/koleksiyon">Koleksiyonum</Link>
+      <Link href="/mesajlar">
+        Mesajlar
+        <NavBadge n={unreadMsgs} />
+      </Link>
+      <Link href="/bildirimler" title="Bildirimler" aria-label="Bildirimler">
+        🔔
+        <NavBadge n={unreadNotifs} />
+      </Link>
       <Link href="/hesap/profil">Hesabım</Link>
       <form action={signOut} style={{ display: "inline" }}>
         <button className="btn btn-o" style={{ padding: "7px 14px", fontSize: 13 }}>
@@ -62,6 +97,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Brand />
           <nav>
             <Link href="/setler">Setler</Link>
+            <Link href="/talepler">Talepler</Link>
             <Link href="/uyeler">Üyeler</Link>
             <Suspense fallback={null}>
               <AuthNav />

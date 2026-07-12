@@ -38,7 +38,11 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = request.nextUrl.pathname;
-  const needsAuth = path.startsWith("/hesap") || path.startsWith("/koleksiyon");
+  const needsAuth =
+    path.startsWith("/hesap") ||
+    path.startsWith("/koleksiyon") ||
+    path.startsWith("/mesajlar") ||
+    path.startsWith("/bildirimler");
   if (needsAuth && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/giris";

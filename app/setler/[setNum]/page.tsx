@@ -12,6 +12,11 @@ import {
   addMinifig,
   removeMinifig,
 } from "@/lib/collection/actions";
+import { startConversation } from "@/lib/messages/actions";
+import { wishersOf } from "@/lib/matching/queries";
+import { Avatar } from "@/app/components/Avatar";
+import { mediaUrl } from "@/lib/media";
+import { BulkForm } from "./BulkForm";
 
 async function ActionButtons({ setNum }: { setNum: string }) {
   const user = await getUser();
@@ -216,6 +221,77 @@ async function MinifigSection({ setNum }: { setNum: string }) {
   );
 }
 
+async function WishersSection({ setNum, setName }: { setNum: string; setName: string }) {
+  const user = await getUser();
+  const wishers = await wishersOf(setNum, user?.id);
+  if (wishers.length === 0) return null;
+
+  let ownedByMe = false;
+  if (user) {
+    const owned = await db()
+      .select({ id: schema.collectionItems.id })
+      .from(schema.collectionItems)
+      .where(
+        and(
+          eq(schema.collectionItems.userId, user.id),
+          eq(schema.collectionItems.setNum, setNum)
+        )
+      )
+      .limit(1);
+    ownedByMe = owned.length > 0;
+  }
+
+  return (
+    <div style={{ marginTop: 26, borderTop: "1px solid var(--line)", paddingTop: 18 }}>
+      <h2 style={{ fontFamily: "var(--disp)", fontSize: 17, fontWeight: 800, marginBottom: 4 }}>
+        🔥 Bu seti isteyenler ({wishers.length})
+      </h2>
+      <p style={{ color: "var(--ink2)", fontSize: 13, marginBottom: 12 }}>
+        İstek listesine ekleyen, iletişime açık üyeler — bütçe girenler önde.
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {wishers.map((w) => (
+          <div key={w.userId} style={{ display: "flex", gap: 11, alignItems: "center", background: "var(--soft)", borderRadius: 12, padding: "10px 14px" }}>
+            <Link href={`/u/${w.handle}`}>
+              <Avatar handle={w.handle} name={w.displayName} size={38} src={mediaUrl(w.avatarPath)} />
+            </Link>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Link href={`/u/${w.handle}`} style={{ fontWeight: 700, fontSize: 14, color: "inherit" }}>
+                {w.displayName || w.handle}
+              </Link>
+              <div style={{ fontSize: 12, color: "var(--ink3)" }}>
+                @{w.handle}
+                {w.city ? ` · ${w.city}` : ""}
+                {w.maxPriceTry ? ` · bütçe ${Number(w.maxPriceTry).toLocaleString("tr-TR")} ₺` : ""}
+              </div>
+            </div>
+            {user && (
+              <form action={startConversation}>
+                <input type="hidden" name="userId" value={w.userId} />
+                <input
+                  type="hidden"
+                  name="text"
+                  value={`Merhaba! İstek listende ${setName} (#${setNum.replace(/-1$/, "")}) görünüyor — bende var, ilgilenirsen konuşalım 🧱`}
+                />
+                <button className="btn btn-o" type="submit" style={{ padding: "6px 14px", fontSize: 13 }}>
+                  Mesaj
+                </button>
+              </form>
+            )}
+          </div>
+        ))}
+      </div>
+      {user && ownedByMe ? (
+        <BulkForm setNum={setNum} count={wishers.length} />
+      ) : user ? (
+        <p style={{ fontSize: 12.5, color: "var(--ink3)", marginTop: 10, textAlign: "center" }}>
+          💡 Bu set koleksiyonunda olsaydı isteyenlere tek tıkla toplu mesaj gönderebilirdin.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export default async function SetDetayPage({
   params,
 }: {
@@ -293,6 +369,10 @@ export default async function SetDetayPage({
 
           <Suspense fallback={null}>
             <MinifigSection setNum={setNum} />
+          </Suspense>
+
+          <Suspense fallback={null}>
+            <WishersSection setNum={setNum} setName={s.name} />
           </Suspense>
         </div>
       </div>

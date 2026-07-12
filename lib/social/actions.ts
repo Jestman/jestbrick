@@ -10,6 +10,25 @@ import { db, schema } from "@/db";
 const MAX_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
 
+/** Aktörün kimliğiyle bildirim düşürür (kendine bildirim üretmez). */
+async function notify(
+  targetUserId: string,
+  actorId: string,
+  type: "follow" | "like" | "comment",
+  extra: Record<string, unknown> = {}
+) {
+  if (targetUserId === actorId) return;
+  const [actor] = await db()
+    .select({ handle: schema.users.handle, name: schema.users.displayName })
+    .from(schema.users)
+    .where(eq(schema.users.id, actorId));
+  await db().insert(schema.notifications).values({
+    userId: targetUserId,
+    type,
+    payload: { actorId, actorHandle: actor?.handle, actorName: actor?.name, ...extra },
+  });
+}
+
 async function requireUser() {
   const supabase = await createClient();
   const {
@@ -26,10 +45,12 @@ export async function follow(formData: FormData) {
   const user = await requireUser();
   if (user.id === followeeId) return;
 
-  await db()
+  const inserted = await db()
     .insert(schema.follows)
     .values({ followerId: user.id, followeeId })
-    .onConflictDoNothing();
+    .onConflictDoNothing()
+    .returning({ f: schema.follows.followerId });
+  if (inserted.length > 0) await notify(followeeId, user.id, "follow");
 
   revalidatePath(back);
   revalidatePath("/");
@@ -61,6 +82,11 @@ export async function addComment(formData: FormData) {
   const user = await requireUser();
 
   await db().insert(schema.comments).values({ postId, authorId: user.id, body });
+  const [post] = await db()
+    .select({ authorId: schema.posts.authorId })
+    .from(schema.posts)
+    .where(eq(schema.posts.id, postId));
+  if (post) await notify(post.authorId, user.id, "comment", { postId, excerpt: body.slice(0, 80) });
   revalidatePath("/");
 }
 
@@ -125,6 +151,11 @@ export async function toggleLike(formData: FormData) {
       .insert(schema.likes)
       .values({ postId, userId: user.id })
       .onConflictDoNothing();
+    const [post] = await db()
+      .select({ authorId: schema.posts.authorId })
+      .from(schema.posts)
+      .where(eq(schema.posts.id, postId));
+    if (post) await notify(post.authorId, user.id, "like", { postId });
   }
 
   revalidatePath(back);
