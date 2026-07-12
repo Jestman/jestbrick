@@ -77,6 +77,8 @@ alter table public.blocks enable row level security;
 alter table public.reports enable row level security;
 alter table public.themes enable row level security;
 alter table public.sets enable row level security;
+alter table public.minifigs enable row level security;
+alter table public.set_minifigs enable row level security;
 alter table public.collection_items enable row level security;
 alter table public.wishlist_items enable row level security;
 alter table public.posts enable row level security;
@@ -102,6 +104,10 @@ drop policy if exists sets_read on public.sets;
 create policy sets_read on public.sets for select using (true);
 drop policy if exists themes_read on public.themes;
 create policy themes_read on public.themes for select using (true);
+drop policy if exists minifigs_read on public.minifigs;
+create policy minifigs_read on public.minifigs for select using (true);
+drop policy if exists set_minifigs_read on public.set_minifigs;
+create policy set_minifigs_read on public.set_minifigs for select using (true);
 -- yazma politikası yok → anon/authenticated yazamaz; service_role RLS'i zaten atlar
 
 -- ---- profiller: herkes okur, sahibi günceller ----

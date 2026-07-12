@@ -10,7 +10,8 @@ Before any Next.js work, find and read the relevant doc in `node_modules/next/di
 
 LEGO koleksiyoncuları için sosyal ağ. Mimari dokümanı: https://claude.ai/code/artifact/64829469-3e7b-4d1a-bbe6-95149c9b8799
 
-- Şemanın kaynağı `db/schema.ts` (Drizzle). RLS politikaları ve tetikleyiciler `db/rls.sql` içinde — şema değişince ikisini birlikte güncelle.
+- Şemanın kaynağı `db/schema.ts` (Drizzle). RLS politikaları ve tetikleyiciler `db/rls.sql` içinde — şema değişince ikisini birlikte güncelle (`node scripts/apply-rls.mjs` idempotenttir).
+- BİLİNEN SORUN: `drizzle-kit push`, rls.sql'in eklediği CHECK kısıtlarını introspect ederken çöküyor (drizzle-kit 0.31 hatası). Yeni tablo/kolon değişikliklerini doğrudan SQL ile uygula (apply-rls.mjs deseni), `db:push` kullanma.
 - Auth: Supabase (`lib/supabase/*`, `proxy.ts` oturumu yeniler). `public.users` satırı auth tetikleyicisiyle otomatik açılır.
 - Katalog salt-okunurdur; tek yazar `scripts/sync-catalog.ts`.
 - UI dili Türkçe; tasarım token'ları `app/globals.css` (prototipten taşındı).

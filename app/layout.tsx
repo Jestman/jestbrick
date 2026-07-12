@@ -43,6 +43,7 @@ async function AuthNav() {
   }
   return (
     <>
+      <Link href="/koleksiyon">Koleksiyonum</Link>
       <Link href="/hesap/kurulum">Hesabım</Link>
       <form action={signOut} style={{ display: "inline" }}>
         <button className="btn btn-o" style={{ padding: "7px 14px", fontSize: 13 }}>

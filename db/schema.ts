@@ -135,6 +135,26 @@ export const sets = pgTable(
   (t) => [index("sets_theme_idx").on(t.themeId), index("sets_year_idx").on(t.year)]
 );
 
+export const minifigs = pgTable("minifigs", {
+  figNum: text("fig_num").primaryKey(), // "fig-006447"
+  name: text("name").notNull(),
+  numParts: integer("num_parts").notNull().default(0),
+  imageUrl: text("image_url"),
+});
+
+export const setMinifigs = pgTable(
+  "set_minifigs",
+  {
+    setNum: text("set_num").notNull().references(() => sets.setNum, { onDelete: "cascade" }),
+    figNum: text("fig_num").notNull().references(() => minifigs.figNum, { onDelete: "cascade" }),
+    quantity: integer("quantity").notNull().default(1),
+  },
+  (t) => [
+    primaryKey({ columns: [t.setNum, t.figNum] }),
+    index("set_minifigs_fig_idx").on(t.figNum),
+  ]
+);
+
 /* ---------------- koleksiyon & istek listesi ---------------- */
 
 export const collectionItems = pgTable(
