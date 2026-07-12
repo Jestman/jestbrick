@@ -80,6 +80,7 @@ alter table public.sets enable row level security;
 alter table public.minifigs enable row level security;
 alter table public.set_minifigs enable row level security;
 alter table public.collection_items enable row level security;
+alter table public.collection_minifigs enable row level security;
 alter table public.wishlist_items enable row level security;
 alter table public.posts enable row level security;
 alter table public.post_media enable row level security;
@@ -141,6 +142,13 @@ create policy collection_read on public.collection_items for select
   using (visibility = 'public' or auth.uid() = user_id);
 drop policy if exists collection_write_own on public.collection_items;
 create policy collection_write_own on public.collection_items for all
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists collection_minifigs_read on public.collection_minifigs;
+create policy collection_minifigs_read on public.collection_minifigs for select
+  using (true); -- profil vitrini herkese açık; gizlilik seçeneği Faz 2
+drop policy if exists collection_minifigs_write_own on public.collection_minifigs;
+create policy collection_minifigs_write_own on public.collection_minifigs for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ---- istek listesi: gizlilik iki anahtarlı ----

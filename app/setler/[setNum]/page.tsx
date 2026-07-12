@@ -1,12 +1,19 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
 import { getUser } from "@/lib/supabase/server";
-import { addToCollection, removeFromCollection } from "@/lib/collection/actions";
+import {
+  addToCollection,
+  removeFromCollection,
+  addToWishlist,
+  removeFromWishlist,
+  addMinifig,
+  removeMinifig,
+} from "@/lib/collection/actions";
 
-async function CollectionButton({ setNum }: { setNum: string }) {
+async function ActionButtons({ setNum }: { setNum: string }) {
   const user = await getUser();
   if (!user) {
     return (
@@ -16,32 +23,57 @@ async function CollectionButton({ setNum }: { setNum: string }) {
     );
   }
 
-  const owned = await db()
-    .select({ id: schema.collectionItems.id })
-    .from(schema.collectionItems)
-    .where(
-      and(
-        eq(schema.collectionItems.userId, user.id),
-        eq(schema.collectionItems.setNum, setNum)
+  const [owned, wished] = await Promise.all([
+    db()
+      .select({ id: schema.collectionItems.id })
+      .from(schema.collectionItems)
+      .where(
+        and(
+          eq(schema.collectionItems.userId, user.id),
+          eq(schema.collectionItems.setNum, setNum)
+        )
       )
-    )
-    .limit(1);
-
-  if (owned.length > 0) {
-    return (
-      <form action={removeFromCollection} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-        <input type="hidden" name="setNum" value={setNum} />
-        <span style={{ color: "var(--green)", fontWeight: 700, fontSize: 14 }}>✓ Koleksiyonunda</span>
-        <button className="btn btn-o" type="submit">Çıkar</button>
-      </form>
-    );
-  }
+      .limit(1),
+    db()
+      .select({ id: schema.wishlistItems.id })
+      .from(schema.wishlistItems)
+      .where(
+        and(
+          eq(schema.wishlistItems.userId, user.id),
+          eq(schema.wishlistItems.setNum, setNum)
+        )
+      )
+      .limit(1),
+  ]);
 
   return (
-    <form action={addToCollection}>
-      <input type="hidden" name="setNum" value={setNum} />
-      <button className="btn btn-y" type="submit">🧱 Koleksiyona Ekle</button>
-    </form>
+    <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+      {owned.length > 0 ? (
+        <form action={removeFromCollection} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <input type="hidden" name="setNum" value={setNum} />
+          <span style={{ color: "var(--green)", fontWeight: 700, fontSize: 14 }}>✓ Koleksiyonunda</span>
+          <button className="btn btn-o" type="submit">Çıkar</button>
+        </form>
+      ) : (
+        <>
+          <form action={addToCollection}>
+            <input type="hidden" name="setNum" value={setNum} />
+            <button className="btn btn-y" type="submit">🧱 Koleksiyona Ekle</button>
+          </form>
+          {wished.length > 0 ? (
+            <form action={removeFromWishlist}>
+              <input type="hidden" name="setNum" value={setNum} />
+              <button className="btn btn-o" type="submit">★ İstek Listemde · Kaldır</button>
+            </form>
+          ) : (
+            <form action={addToWishlist}>
+              <input type="hidden" name="setNum" value={setNum} />
+              <button className="btn btn-o" type="submit">☆ İstek Listeme</button>
+            </form>
+          )}
+        </>
+      )}
+    </div>
   );
 }
 
@@ -60,31 +92,125 @@ async function MinifigSection({ setNum }: { setNum: string }) {
 
   if (figs.length === 0) return null;
 
+  // Girişliyse: bu figürlerden kullanıcıda kaç tane var (setlerden + tekil)?
+  const user = await getUser();
+  const ownedMap = new Map<string, number>();
+  if (user) {
+    const figNums = figs.map((f) => f.figNum);
+    const [derived, deltas] = await Promise.all([
+      db()
+        .select({
+          figNum: schema.setMinifigs.figNum,
+          q: sql<number>`coalesce(sum(${schema.setMinifigs.quantity}), 0)::int`,
+        })
+        .from(schema.collectionItems)
+        .innerJoin(
+          schema.setMinifigs,
+          eq(schema.collectionItems.setNum, schema.setMinifigs.setNum)
+        )
+        .where(
+          and(
+            eq(schema.collectionItems.userId, user.id),
+            inArray(schema.setMinifigs.figNum, figNums)
+          )
+        )
+        .groupBy(schema.setMinifigs.figNum),
+      db()
+        .select({
+          figNum: schema.collectionMinifigs.figNum,
+          delta: schema.collectionMinifigs.delta,
+        })
+        .from(schema.collectionMinifigs)
+        .where(
+          and(
+            eq(schema.collectionMinifigs.userId, user.id),
+            inArray(schema.collectionMinifigs.figNum, figNums)
+          )
+        ),
+    ]);
+    for (const d of derived) ownedMap.set(d.figNum, d.q);
+    for (const d of deltas) ownedMap.set(d.figNum, (ownedMap.get(d.figNum) ?? 0) + d.delta);
+  }
+
   return (
     <div style={{ marginTop: 22 }}>
-      <h2 style={{ fontFamily: "var(--disp)", fontSize: 17, fontWeight: 800, marginBottom: 12 }}>
+      <h2 style={{ fontFamily: "var(--disp)", fontSize: 17, fontWeight: 800, marginBottom: 6 }}>
         Bu setteki minifigürler ({figs.reduce((a, f) => a + f.quantity, 0)})
       </h2>
-      <div className="setgrid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))" }}>
-        {figs.map((f) => (
-          <div key={f.figNum} className="setcard">
-            <div className="img" style={{ height: 120 }}>
-              {f.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={f.imageUrl} alt={f.name} loading="lazy" />
-              ) : (
-                <span style={{ fontSize: 34 }}>🙂</span>
+      {user && (
+        <p style={{ color: "var(--ink2)", fontSize: 13, marginBottom: 12 }}>
+          Set sende olmasa da figürü tek başına koleksiyonuna ekleyebilirsin.
+        </p>
+      )}
+      <div className="setgrid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
+        {figs.map((f) => {
+          const owned = ownedMap.get(f.figNum) ?? 0;
+          return (
+            <div key={f.figNum} className="setcard">
+              <div className="img" style={{ height: 120, position: "relative" }}>
+                {f.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={f.imageUrl} alt={f.name} loading="lazy" />
+                ) : (
+                  <span style={{ fontSize: 34 }}>🙂</span>
+                )}
+                {owned > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      background: "var(--green)",
+                      color: "#fff",
+                      fontSize: 11,
+                      fontWeight: 800,
+                      padding: "2px 8px",
+                      borderRadius: 99,
+                    }}
+                  >
+                    sende ×{owned}
+                  </span>
+                )}
+              </div>
+              <div className="meta">
+                <b style={{ fontSize: 13 }}>{f.name}</b>
+                <small>
+                  {f.figNum}
+                  {f.quantity > 1 ? ` · sette ${f.quantity} adet` : ""}
+                </small>
+              </div>
+              {user && (
+                <div style={{ display: "flex", gap: 6, padding: "0 12px 11px" }}>
+                  <form action={addMinifig} style={{ flex: 1 }}>
+                    <input type="hidden" name="figNum" value={f.figNum} />
+                    <input type="hidden" name="back" value={`/setler/${setNum}`} />
+                    <button
+                      className="btn btn-y"
+                      type="submit"
+                      style={{ width: "100%", padding: "5px 8px", fontSize: 12.5 }}
+                    >
+                      + Ekle
+                    </button>
+                  </form>
+                  {owned > 0 && (
+                    <form action={removeMinifig}>
+                      <input type="hidden" name="figNum" value={f.figNum} />
+                      <input type="hidden" name="back" value={`/setler/${setNum}`} />
+                      <button
+                        className="btn btn-o"
+                        type="submit"
+                        style={{ padding: "5px 10px", fontSize: 12.5 }}
+                        title="Bir adet çıkar"
+                      >
+                        −
+                      </button>
+                    </form>
+                  )}
+                </div>
               )}
             </div>
-            <div className="meta">
-              <b style={{ fontSize: 13 }}>{f.name}</b>
-              <small>
-                {f.figNum}
-                {f.quantity > 1 ? ` · ${f.quantity} adet` : ""}
-              </small>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -161,7 +287,7 @@ export default async function SetDetayPage({
 
           <div style={{ marginTop: 20 }}>
             <Suspense fallback={<span style={{ color: "var(--ink3)", fontSize: 14 }}>…</span>}>
-              <CollectionButton setNum={setNum} />
+              <ActionButtons setNum={setNum} />
             </Suspense>
           </div>
 

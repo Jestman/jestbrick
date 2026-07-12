@@ -157,6 +157,19 @@ export const setMinifigs = pgTable(
 
 /* ---------------- koleksiyon & istek listesi ---------------- */
 
+// Tekil minifigür düzeltmeleri: setten türetilen sayıya eklenen fark.
+// delta > 0 → tekil edinilen; delta < 0 → setten gelip elden çıkan (ör. satıldı).
+// Toplam = setlerden türetilen + delta (0 altına inmez, uygulama katmanında sınırlanır).
+export const collectionMinifigs = pgTable(
+  "collection_minifigs",
+  {
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    figNum: text("fig_num").notNull().references(() => minifigs.figNum, { onDelete: "cascade" }),
+    delta: integer("delta").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.figNum] })]
+);
+
 export const collectionItems = pgTable(
   "collection_items",
   {
