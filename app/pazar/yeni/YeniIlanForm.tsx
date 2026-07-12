@@ -56,6 +56,14 @@ export function YeniIlanForm({
         />
       </label>
 
+      <label style={{ fontSize: 13.5, fontWeight: 700 }}>
+        Fotoğraflar <span style={{ fontWeight: 400, color: "var(--ink3)" }}>(en fazla 4 · isteğe bağlı)</span>
+        <input
+          name="photos" type="file" accept="image/*" multiple
+          style={{ ...inputStyle, marginTop: 5, padding: "8px 10px" }}
+        />
+      </label>
+
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
         <label style={{ fontSize: 13.5, fontWeight: 700, flex: 1, minWidth: 180 }}>
           Şehir

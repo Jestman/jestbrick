@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { db, schema } from "@/db";
+import { flagEnabled } from "@/lib/settings";
 
 export type AuthState = { error?: string } | undefined;
 
@@ -18,6 +19,9 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
 
   if (!email || password.length < 8) {
     return { error: "Geçerli bir e-posta ve en az 8 karakterli bir şifre gerekli." };
+  }
+  if (!(await flagEnabled("signup_enabled"))) {
+    return { error: "Yeni kayıtlar şu an geçici olarak kapalı. Daha sonra tekrar dene." };
   }
 
   const supabase = await createClient();

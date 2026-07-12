@@ -2,8 +2,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { asc, eq } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
+import { flagEnabled } from "@/lib/settings";
 import { getUser } from "@/lib/supabase/server";
 import { replyTopic } from "@/lib/forum/actions";
+import { modTopic, deleteTopicPost } from "@/lib/admin/actions";
+import { reportContent } from "@/lib/reports/actions";
+import { currentRole, isModerator } from "@/lib/admin/guards";
 import { Avatar } from "@/app/components/Avatar";
 import { mediaUrl } from "@/lib/media";
 import { timeAgo } from "@/lib/format";
@@ -15,6 +19,7 @@ export default async function KonuPage({
 }) {
   const { id } = await params;
   if (!envReady()) redirect("/");
+  if (!(await flagEnabled("forum_enabled"))) redirect("/");
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
 
   const [topicRows, posts, user] = await Promise.all([
@@ -51,6 +56,9 @@ export default async function KonuPage({
   if (!row) notFound();
   const t = row.topic;
 
+  const me = user ? await currentRole() : null;
+  const canMod = !!me && isModerator(me.role);
+
   return (
     <main className="wrap" style={{ maxWidth: 720 }}>
       <Link href={`/forum?k=${row.categorySlug}`} style={{ fontSize: 13.5, fontWeight: 600 }}>
@@ -61,6 +69,15 @@ export default async function KonuPage({
         {t.locked && "🔒 "}
         {t.title}
       </h1>
+
+      {canMod && (
+        <div className="notice" style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", marginBottom: 14 }}>
+          <b style={{ fontSize: 12.5 }}>🛡️ Moderasyon:</b>
+          <ModBtn topicId={t.id} op={t.pinned ? "unpin" : "pin"} label={t.pinned ? "Sabitliği kaldır" : "📌 Sabitle"} />
+          <ModBtn topicId={t.id} op={t.locked ? "unlock" : "lock"} label={t.locked ? "Kilidi aç" : "🔒 Kilitle"} />
+          <ModBtn topicId={t.id} op="delete" label="🗑 Başlığı Sil" />
+        </div>
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {posts.map((p, i) => (
@@ -79,6 +96,28 @@ export default async function KonuPage({
               </div>
             </div>
             <p style={{ fontSize: 14.5, lineHeight: 1.65, whiteSpace: "pre-wrap" }}>{p.body}</p>
+            <div style={{ display: "flex", gap: 10, marginTop: 8, justifyContent: "flex-end" }}>
+              {user && user.id !== p.authorId && (
+                <form action={reportContent}>
+                  <input type="hidden" name="targetKind" value="topic_post" />
+                  <input type="hidden" name="targetId" value={p.id} />
+                  <input type="hidden" name="reason" value="Forum mesajı şikayeti" />
+                  <input type="hidden" name="back" value={`/forum/konu/${t.id}`} />
+                  <button type="submit" title="Şikayet et" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--ink3)" }}>
+                    🚩 Şikayet
+                  </button>
+                </form>
+              )}
+              {canMod && i > 0 && (
+                <form action={deleteTopicPost}>
+                  <input type="hidden" name="postId" value={p.id} />
+                  <input type="hidden" name="topicId" value={t.id} />
+                  <button type="submit" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--red)", fontWeight: 700 }}>
+                    🗑 Sil
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -106,5 +145,17 @@ export default async function KonuPage({
         </div>
       )}
     </main>
+  );
+}
+
+function ModBtn({ topicId, op, label }: { topicId: string; op: string; label: string }) {
+  return (
+    <form action={modTopic} style={{ display: "inline" }}>
+      <input type="hidden" name="topicId" value={topicId} />
+      <input type="hidden" name="op" value={op} />
+      <button className="btn btn-o" type="submit" style={{ padding: "5px 11px", fontSize: 12 }}>
+        {label}
+      </button>
+    </form>
   );
 }

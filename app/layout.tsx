@@ -7,6 +7,8 @@ import { getUser } from "@/lib/supabase/server";
 import { db, envReady, schema } from "@/db";
 import { signOut } from "@/lib/auth/actions";
 import { unreadConversationCount } from "@/lib/messages/helpers";
+import { currentRole, isModerator } from "@/lib/admin/guards";
+import { getFlags } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: { default: "JestBrick — LEGO Koleksiyoncu Ağı", template: "%s · JestBrick" },
@@ -60,17 +62,19 @@ async function AuthNav() {
     );
   }
 
-  const [unreadMsgs, [{ unreadNotifs }]] = await Promise.all([
+  const [unreadMsgs, [{ unreadNotifs }], me] = await Promise.all([
     unreadConversationCount(user.id),
     db()
       .select({ unreadNotifs: count() })
       .from(schema.notifications)
       .where(and(eq(schema.notifications.userId, user.id), isNull(schema.notifications.readAt))),
+    currentRole(),
   ]);
 
   return (
     <>
       <Link href="/koleksiyon">Koleksiyonum</Link>
+      {me && isModerator(me.role) && <Link href="/yonetim">🛡️ Yönetim</Link>}
       <Link href="/mesajlar">
         Mesajlar
         <NavBadge n={unreadMsgs} />
@@ -89,6 +93,28 @@ async function AuthNav() {
   );
 }
 
+async function SectionNav() {
+  if (!envReady()) {
+    return (
+      <>
+        <Link href="/setler">Setler</Link>
+        <Link href="/talepler">Talepler</Link>
+        <Link href="/uyeler">Üyeler</Link>
+      </>
+    );
+  }
+  const flags = await getFlags();
+  return (
+    <>
+      <Link href="/setler">Setler</Link>
+      {flags.market_enabled && <Link href="/pazar">Pazar</Link>}
+      <Link href="/talepler">Talepler</Link>
+      {flags.forum_enabled && <Link href="/forum">Forum</Link>}
+      <Link href="/uyeler">Üyeler</Link>
+    </>
+  );
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr">
@@ -96,11 +122,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <header className="topbar">
           <Brand />
           <nav>
-            <Link href="/setler">Setler</Link>
-            <Link href="/pazar">Pazar</Link>
-            <Link href="/talepler">Talepler</Link>
-            <Link href="/forum">Forum</Link>
-            <Link href="/uyeler">Üyeler</Link>
+            <Suspense fallback={null}>
+              <SectionNav />
+            </Suspense>
             <Suspense fallback={null}>
               <AuthNav />
             </Suspense>

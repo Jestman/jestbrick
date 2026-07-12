@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
+import { flagEnabled } from "@/lib/settings";
 import { getUser } from "@/lib/supabase/server";
 import { timeAgo } from "@/lib/format";
 
@@ -13,6 +14,7 @@ export default async function ForumPage({
   searchParams: Promise<{ k?: string }>;
 }) {
   if (!envReady()) redirect("/");
+  if (!(await flagEnabled("forum_enabled"))) redirect("/");
   const { k } = await searchParams;
   const user = await getUser();
 

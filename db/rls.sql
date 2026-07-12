@@ -310,6 +310,20 @@ drop policy if exists notifications_own_update on public.notifications;
 create policy notifications_own_update on public.notifications for update
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- ============ site ayarları (yönetim paneli aç-kapa anahtarları) ============
+-- Enum güncellemesi: alter type user_role add value if not exists 'moderator';
+create table if not exists public.site_settings (
+  key text primary key,
+  value jsonb not null default 'true'::jsonb,
+  updated_at timestamptz not null default now()
+);
+alter table public.site_settings enable row level security;
+drop policy if exists site_settings_read on public.site_settings;
+create policy site_settings_read on public.site_settings for select using (true);
+insert into public.site_settings (key, value) values
+  ('market_enabled', 'true'), ('forum_enabled', 'true'), ('signup_enabled', 'true')
+on conflict (key) do nothing;
+
 -- ============ Realtime yayını (DM ve bildirimler canlı düşsün) ============
 do $$
 begin

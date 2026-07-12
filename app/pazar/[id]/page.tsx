@@ -2,9 +2,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
+import { flagEnabled } from "@/lib/settings";
 import { getUser } from "@/lib/supabase/server";
 import { getListing, sellerStats } from "@/lib/market/queries";
 import { contactSeller, setListingStatus, rateSeller } from "@/lib/market/actions";
+import { removeListingAdmin } from "@/lib/admin/actions";
+import { reportContent } from "@/lib/reports/actions";
+import { currentRole, isModerator } from "@/lib/admin/guards";
 import { Avatar } from "@/app/components/Avatar";
 import { mediaUrl } from "@/lib/media";
 import { timeAgo } from "@/lib/format";
@@ -28,6 +32,7 @@ export default async function IlanDetayPage({
 }) {
   const { id } = await params;
   if (!envReady()) redirect("/");
+  if (!(await flagEnabled("market_enabled"))) redirect("/");
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
 
   const row = await getListing(id);
@@ -36,12 +41,22 @@ export default async function IlanDetayPage({
 
   const user = await getUser();
   const isOwner = user?.id === l.sellerId;
+  const me = user ? await currentRole() : null;
+  const canMod = !!me && isModerator(me.role);
 
-  // kaldırılan ilanı sadece sahibi görür
-  if (l.status === "removed" && !isOwner) notFound();
+  // kaldırılan ilanı sadece sahibi ve moderasyon görür
+  if (l.status === "removed" && !isOwner && !canMod) notFound();
 
-  const stats = await sellerStats(l.sellerId);
-  const img = row.imagePath ?? row.imageUrl;
+  const [stats, photos] = await Promise.all([
+    sellerStats(l.sellerId),
+    db()
+      .select({ storagePath: schema.listingImages.storagePath })
+      .from(schema.listingImages)
+      .where(eq(schema.listingImages.listingId, id))
+      .orderBy(schema.listingImages.position),
+  ]);
+  // Satıcı fotoğrafı varsa o esas; katalog görseli yedek
+  const img = photos.length > 0 ? mediaUrl(photos[0].storagePath) : (row.imagePath ?? row.imageUrl);
   const st = STATUS_TR[l.status];
 
   // alıcı bu ilanı puanlamış mı?
@@ -71,6 +86,17 @@ export default async function IlanDetayPage({
             {st.label}
           </span>
         </div>
+        {photos.length > 1 && (
+          <div style={{ display: "flex", gap: 8, padding: "10px 14px", background: "var(--soft)", borderTop: "1px solid var(--line)", overflowX: "auto" }}>
+            {photos.map((p, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={p.storagePath} src={mediaUrl(p.storagePath) ?? undefined} alt={`Fotoğraf ${i + 1}`}
+                style={{ height: 72, borderRadius: 8, border: "1px solid var(--line)" }}
+              />
+            ))}
+          </div>
+        )}
 
         <div style={{ padding: "20px 24px" }}>
           <h1 style={{ fontFamily: "var(--disp)", fontSize: 22, fontWeight: 800, letterSpacing: "-0.3px" }}>
@@ -179,6 +205,29 @@ export default async function IlanDetayPage({
               ✓ Bu satıcıyı puanladın, teşekkürler!
             </p>
           )}
+
+          {/* şikayet + moderasyon */}
+          <div style={{ display: "flex", gap: 12, marginTop: 16, justifyContent: "flex-end", alignItems: "center" }}>
+            {user && !isOwner && (
+              <form action={reportContent}>
+                <input type="hidden" name="targetKind" value="listing" />
+                <input type="hidden" name="targetId" value={l.id} />
+                <input type="hidden" name="reason" value="İlan şikayeti" />
+                <input type="hidden" name="back" value={`/pazar/${l.id}`} />
+                <button type="submit" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12.5, color: "var(--ink3)" }}>
+                  🚩 İlanı şikayet et
+                </button>
+              </form>
+            )}
+            {canMod && !isOwner && l.status !== "removed" && (
+              <form action={removeListingAdmin}>
+                <input type="hidden" name="listingId" value={l.id} />
+                <button className="btn btn-o" type="submit" style={{ padding: "6px 12px", fontSize: 12.5, color: "var(--red)" }}>
+                  🛡️ İlanı Kaldır
+                </button>
+              </form>
+            )}
+          </div>
         </div>
       </div>
     </main>

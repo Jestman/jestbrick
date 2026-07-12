@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { asc } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
+import { flagEnabled } from "@/lib/settings";
 import { getUser } from "@/lib/supabase/server";
 import { YeniBaslikForm } from "./YeniBaslikForm";
 
@@ -13,6 +14,7 @@ export default async function YeniBaslikPage({
   searchParams: Promise<{ k?: string }>;
 }) {
   if (!envReady()) redirect("/");
+  if (!(await flagEnabled("forum_enabled"))) redirect("/");
   const user = await getUser();
   if (!user) redirect("/giris?sonra=/forum/yeni");
 

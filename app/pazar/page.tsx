@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { envReady } from "@/db";
+import { flagEnabled } from "@/lib/settings";
 import { getUser } from "@/lib/supabase/server";
 import { activeListings } from "@/lib/market/queries";
 import { timeAgo } from "@/lib/format";
@@ -15,6 +16,7 @@ const CONDITION_TR: Record<string, string> = {
 
 export default async function PazarPage() {
   if (!envReady()) redirect("/");
+  if (!(await flagEnabled("market_enabled"))) redirect("/");
   const [user, listings] = await Promise.all([getUser(), activeListings()]);
 
   return (

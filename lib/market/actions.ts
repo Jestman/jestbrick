@@ -4,12 +4,15 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, eq, ne, sql } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { db, schema } from "@/db";
 import { findOrCreateDirect } from "@/lib/messages/helpers";
 import { notify } from "@/lib/notify";
 
 const MAX_PRICE = 1_000_000;
 const CONDITIONS = new Set(schema.listingCondition.enumValues);
+const MAX_PHOTOS = 4;
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
 
 async function requireUser() {
   const supabase = await createClient();
@@ -48,6 +51,13 @@ export async function createListing(
     .where(eq(schema.sets.setNum, setNum));
   if (!setRow) return { error: "Set katalogda bulunamadı." };
 
+  const files = formData
+    .getAll("photos")
+    .filter((f): f is File => f instanceof File && f.size > 0 && f.type.startsWith("image/"))
+    .slice(0, MAX_PHOTOS);
+  if (files.some((f) => f.size > MAX_PHOTO_BYTES))
+    return { error: "Fotoğraflar en fazla 8 MB olabilir." };
+
   const [listing] = await db()
     .insert(schema.listings)
     .values({
@@ -60,6 +70,23 @@ export async function createListing(
       ships,
     })
     .returning({ id: schema.listings.id });
+
+  if (files.length > 0) {
+    const admin = createAdminClient();
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      const ext = (f.type.split("/")[1] || "jpg").replace("jpeg", "jpg");
+      const path = `listings/${listing.id}/${i}.${ext}`;
+      const { error } = await admin.storage
+        .from("media")
+        .upload(path, Buffer.from(await f.arrayBuffer()), { contentType: f.type, upsert: true });
+      if (!error) {
+        await db()
+          .insert(schema.listingImages)
+          .values({ listingId: listing.id, storagePath: path, position: i });
+      }
+    }
+  }
 
   // Eşleştirme köprüsü: bu seti isteyip ilan bildirimi açık olanlara haber ver
   const wishers = await db()

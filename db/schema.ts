@@ -25,7 +25,7 @@ const createdAt = () =>
 
 /* ---------------- enums ---------------- */
 
-export const userRole = pgEnum("user_role", ["standard", "creator", "staff"]);
+export const userRole = pgEnum("user_role", ["standard", "creator", "moderator", "staff"]);
 export const itemVisibility = pgEnum("item_visibility", ["public", "private"]);
 export const collectionCondition = pgEnum("collection_condition", ["sealed", "built", "parts"]);
 export const postKind = pgEnum("post_kind", [
@@ -385,6 +385,13 @@ export const matchBroadcasts = pgTable(
   },
   (t) => [uniqueIndex("broadcast_daily_uq").on(t.senderId, t.sentOn)]
 );
+
+// Site ayarları: sayfa aç-kapa vb. Herkes okur, sadece service_role yazar.
+export const siteSettings = pgTable("site_settings", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 export const notifications = pgTable(
   "notifications",

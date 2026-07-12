@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { asc, eq, sql } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
+import { flagEnabled } from "@/lib/settings";
 import { getUser } from "@/lib/supabase/server";
 import { YeniIlanForm } from "./YeniIlanForm";
 
@@ -14,6 +15,7 @@ export default async function YeniIlanPage({
   searchParams: Promise<{ set?: string; q?: string }>;
 }) {
   if (!envReady()) redirect("/");
+  if (!(await flagEnabled("market_enabled"))) redirect("/");
   const user = await getUser();
   if (!user) redirect("/giris?sonra=/pazar/yeni");
 
