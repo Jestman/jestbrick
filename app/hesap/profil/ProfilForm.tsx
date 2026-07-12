@@ -12,6 +12,7 @@ export function ProfilForm({
     bio: string;
     city: string;
     wishlistPublic: boolean;
+    profilePublic: boolean;
   };
 }) {
   const [state, action, pending] = useActionState(updateProfile, undefined);
@@ -58,9 +59,18 @@ export function ProfilForm({
           <label htmlFor="avatar">Profil fotoğrafı (en fazla 4MB)</label>
           <input id="avatar" name="avatar" type="file" accept="image/*" style={{ border: "none", padding: 0 }} />
         </div>
-        <label style={{ display: "flex", gap: 9, alignItems: "center", fontSize: 14, marginBottom: 16, cursor: "pointer" }}>
+        <label style={{ display: "flex", gap: 9, alignItems: "center", fontSize: 14, marginBottom: 10, cursor: "pointer" }}>
           <input type="checkbox" name="wishlistPublic" defaultChecked={defaults.wishlistPublic} />
           İstek listem profilimde görünsün (eşleştirme önerileri için gerekli)
+        </label>
+        <label style={{ display: "flex", gap: 9, alignItems: "flex-start", fontSize: 14, marginBottom: 16, cursor: "pointer" }}>
+          <input type="checkbox" name="profilePublic" defaultChecked={defaults.profilePublic} style={{ marginTop: 3 }} />
+          <span>
+            Herkese açık profil — üye olmayanlar da linkle koleksiyonumu görebilsin
+            <small style={{ display: "block", color: "var(--ink3)", marginTop: 2 }}>
+              Kapatırsan vitrinin yalnızca JestBrick üyelerine görünür.
+            </small>
+          </span>
         </label>
         <button className="btn btn-y" style={{ width: "100%" }} disabled={pending}>
           {pending ? "Kaydediliyor…" : "Kaydet"}

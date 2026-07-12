@@ -7,6 +7,50 @@ import { follow, unfollow } from "@/lib/social/actions";
 import { Avatar, RoleBadge } from "@/app/components/Avatar";
 import { avatarHue } from "@/lib/format";
 import { mediaUrl } from "@/lib/media";
+import { CopyLink } from "./CopyLink";
+
+/** Paylaşım kartları (WhatsApp/Instagram/X) için OG başlığı. */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ handle: string }>;
+}) {
+  const { handle } = await params;
+  if (!envReady()) return {};
+  const [u] = await db()
+    .select({
+      displayName: schema.users.displayName,
+      handle: schema.users.handle,
+      bio: schema.users.bio,
+      profilePublic: schema.users.profilePublic,
+      id: schema.users.id,
+    })
+    .from(schema.users)
+    .where(eq(schema.users.handle, handle.toLowerCase()))
+    .limit(1);
+  if (!u) return {};
+  const name = u.displayName || `@${u.handle}`;
+  if (!u.profilePublic) return { title: `${name} — JestBrick` };
+
+  const [stats] = await db()
+    .select({
+      sets: sql<number>`count(*)::int`,
+      parts: sql<number>`coalesce(sum(${schema.sets.numParts}), 0)::int`,
+    })
+    .from(schema.collectionItems)
+    .innerJoin(schema.sets, eq(schema.collectionItems.setNum, schema.sets.setNum))
+    .where(and(eq(schema.collectionItems.userId, u.id), eq(schema.collectionItems.visibility, "public")));
+
+  const desc =
+    stats && stats.sets > 0
+      ? `${stats.sets} set · ${Number(stats.parts).toLocaleString("tr-TR")} parça — ${name} LEGO koleksiyonunu JestBrick'te sergiliyor.`
+      : `${name} JestBrick'te — LEGO koleksiyoncularının buluşma noktası.`;
+  return {
+    title: `${name} — LEGO Koleksiyonu`,
+    description: u.bio || desc,
+    openGraph: { title: `${name} — LEGO Koleksiyonu 🧱`, description: desc },
+  };
+}
 
 export default async function ProfilPage({
   params,
@@ -26,6 +70,30 @@ export default async function ProfilPage({
 
   const viewer = await getUser();
   const isMe = viewer?.id === u.id;
+
+  // Kapalı profil: üye olmayan ziyaretçi vitrini göremez, kayıt kapısı görür
+  if (!u.profilePublic && !viewer) {
+    return (
+      <main className="wrap" style={{ maxWidth: 480 }}>
+        <div className="card" style={{ padding: 28, textAlign: "center" }}>
+          <Avatar handle={u.handle} name={u.displayName} size={72} src={mediaUrl(u.avatarPath)} />
+          <h1 style={{ fontFamily: "var(--disp)", fontSize: 21, fontWeight: 800, marginTop: 12 }}>
+            {u.displayName || u.handle}
+          </h1>
+          <p style={{ color: "var(--ink3)", fontSize: 14 }}>@{u.handle}</p>
+          <p style={{ margin: "16px 0", fontSize: 14.5, color: "var(--ink2)" }}>
+            🔒 Bu koleksiyon yalnızca JestBrick üyelerine açık.
+          </p>
+          <Link href={`/kayit?sonra=/u/${u.handle}`} className="btn btn-y" style={{ marginRight: 8 }}>
+            Ücretsiz Katıl
+          </Link>
+          <Link href={`/giris?sonra=/u/${u.handle}`} className="btn btn-o">
+            Giriş Yap
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   const [
     [{ followers }],
@@ -123,7 +191,10 @@ export default async function ProfilPage({
             </div>
             <div style={{ marginLeft: "auto", paddingTop: 12 }}>
               {isMe ? (
-                <Link href="/hesap/profil" className="btn btn-o">Profili Düzenle</Link>
+                <span style={{ display: "inline-flex", gap: 8 }}>
+                  <CopyLink handle={u.handle} />
+                  <Link href="/hesap/profil" className="btn btn-o">Profili Düzenle</Link>
+                </span>
               ) : viewer ? (
                 viewerFollows.length > 0 ? (
                   <form action={unfollow}>
@@ -139,7 +210,7 @@ export default async function ProfilPage({
                   </form>
                 )
               ) : (
-                <Link href={`/giris?sonra=/u/${u.handle}`} className="btn btn-y">Takip Et</Link>
+                <Link href={`/kayit?sonra=/u/${u.handle}`} className="btn btn-y">Takip Et</Link>
               )}
             </div>
           </div>
@@ -252,6 +323,23 @@ export default async function ProfilPage({
 
       {mySets.length === 0 && figs.length === 0 && (
         <div className="notice" style={{ marginTop: 20 }}>Bu üyenin vitrini henüz boş.</div>
+      )}
+
+      {!viewer && (
+        <div
+          className="card"
+          style={{ marginTop: 28, padding: "22px 26px", textAlign: "center", background: "var(--yellow-soft)" }}
+        >
+          <b style={{ fontFamily: "var(--disp)", fontSize: 17 }}>
+            Sen de koleksiyonunu sergile 🧱
+          </b>
+          <p style={{ fontSize: 14, color: "var(--ink2)", margin: "8px 0 14px" }}>
+            Setlerini kataloglara, minifigürlerini vitrine ekle; seti olanla arayanı JestBrick buluştursun.
+          </p>
+          <Link href={`/kayit?sonra=/u/${u.handle}`} className="btn btn-y">
+            Ücretsiz Katıl
+          </Link>
+        </div>
       )}
     </main>
   );

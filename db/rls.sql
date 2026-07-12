@@ -35,6 +35,9 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- profil görünürlüğü (12 Tem 2026): kapalıysa üye olmayanlara vitrin gizlenir
+alter table public.users add column if not exists profile_public boolean not null default true;
+
 -- handle küçük harf ve biçim garantisi
 alter table public.users drop constraint if exists users_handle_format;
 alter table public.users add constraint users_handle_format

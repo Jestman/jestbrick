@@ -33,6 +33,7 @@ export default async function ProfilDuzenlePage() {
           bio: u.bio,
           city: u.city ?? "",
           wishlistPublic: u.wishlistPublic,
+          profilePublic: u.profilePublic,
         }}
       />
     </main>

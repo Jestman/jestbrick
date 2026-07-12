@@ -113,6 +113,7 @@ export async function updateProfile(_prev: AuthState, formData: FormData): Promi
   const bio = String(formData.get("bio") ?? "").trim().slice(0, 300);
   const city = String(formData.get("city") ?? "").trim().slice(0, 60);
   const wishlistPublic = formData.get("wishlistPublic") === "on";
+  const profilePublic = formData.get("profilePublic") === "on";
 
   if (!HANDLE_RE.test(handle)) {
     return { error: "Kullanıcı adı 3-24 karakter olmalı; küçük harf, rakam, nokta ve alt çizgi." };
@@ -152,6 +153,7 @@ export async function updateProfile(_prev: AuthState, formData: FormData): Promi
       bio,
       city: city || null,
       wishlistPublic,
+      profilePublic,
       ...(avatarPath ? { avatarPath } : {}),
     })
     .where(eq(schema.users.id, user.id));

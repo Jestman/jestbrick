@@ -70,6 +70,7 @@ export const users = pgTable(
     city: text("city"),
     avatarPath: text("avatar_path"),
     wishlistPublic: boolean("wishlist_public").notNull().default(true),
+    profilePublic: boolean("profile_public").notNull().default(true), // kapalıysa profil üyelere özel
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("users_handle_lower_idx").on(t.handle)]
