@@ -256,3 +256,14 @@ h1.page {
   padding: 1px 6px;
   font-size: 0.85em;
 }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 4px 12px;
+  font-weight: 600;
+}

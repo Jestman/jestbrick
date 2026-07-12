@@ -11,10 +11,13 @@ const TEXT: Record<string, (p: Record<string, string>) => string> = {
   follow: () => "seni takip etmeye başladı",
   like: () => "paylaşımını beğendi",
   comment: (p) => `paylaşımına yorum yaptı: “${p.excerpt ?? ""}”`,
-  wishlist_listing: () => "istek listendeki set için ilan açtı",
-  listing_interest: () => "ilanınla ilgileniyor",
+  wishlist_listing: (p) =>
+    `istek listendeki ${p.setName ?? "set"} için ilan açtı${
+      p.price ? ` — ${Number(p.price).toLocaleString("tr-TR")} ₺` : ""
+    }`,
+  listing_interest: (p) => `${p.setName ? `${p.setName} ` : ""}ilanınla ilgileniyor`,
   demand_on_owned: () => "koleksiyonundaki bir seti arıyor",
-  reply: () => "yorumuna yanıt verdi",
+  reply: (p) => (p.title ? `“${p.title}” başlığına yanıt yazdı` : "yorumuna yanıt verdi"),
 };
 
 const ICON: Record<string, string> = {
@@ -69,7 +72,13 @@ export default async function BildirimlerPage() {
                   ) : (
                     <b>JestBrick</b>
                   )}{" "}
-                  {text}
+                  {p.listingId ? (
+                    <Link href={`/pazar/${p.listingId}`} style={{ color: "inherit" }}>{text} →</Link>
+                  ) : p.topicId ? (
+                    <Link href={`/forum/konu/${p.topicId}`} style={{ color: "inherit" }}>{text} →</Link>
+                  ) : (
+                    text
+                  )}
                   <div style={{ fontSize: 12, color: "var(--ink3)", marginTop: 2 }}>{timeAgo(n.createdAt)}</div>
                 </div>
               </div>

@@ -97,7 +97,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Brand />
           <nav>
             <Link href="/setler">Setler</Link>
+            <Link href="/pazar">Pazar</Link>
             <Link href="/talepler">Talepler</Link>
+            <Link href="/forum">Forum</Link>
             <Link href="/uyeler">Üyeler</Link>
             <Suspense fallback={null}>
               <AuthNav />

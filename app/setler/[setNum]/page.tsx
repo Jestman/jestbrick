@@ -54,11 +54,16 @@ async function ActionButtons({ setNum }: { setNum: string }) {
   return (
     <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
       {owned.length > 0 ? (
-        <form action={removeFromCollection} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <input type="hidden" name="setNum" value={setNum} />
-          <span style={{ color: "var(--green)", fontWeight: 700, fontSize: 14 }}>✓ Koleksiyonunda</span>
-          <button className="btn btn-o" type="submit">Çıkar</button>
-        </form>
+        <>
+          <form action={removeFromCollection} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <input type="hidden" name="setNum" value={setNum} />
+            <span style={{ color: "var(--green)", fontWeight: 700, fontSize: 14 }}>✓ Koleksiyonunda</span>
+            <button className="btn btn-o" type="submit">Çıkar</button>
+          </form>
+          <Link href={`/pazar/yeni?set=${setNum}`} className="btn btn-o">
+            🏷️ Satışa Çıkar
+          </Link>
+        </>
       ) : (
         <>
           <form action={addToCollection}>
