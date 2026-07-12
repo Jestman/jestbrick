@@ -9,7 +9,8 @@
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "sync:catalog": "tsx scripts/sync-catalog.ts"
+    "sync:catalog": "tsx scripts/sync-catalog.ts",
+    "sync:brickset": "tsx scripts/sync-brickset.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

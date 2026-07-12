@@ -57,18 +57,9 @@ alter table public.sets
 create index if not exists sets_search_idx on public.sets using gin (search);
 create index if not exists sets_name_trgm_idx on public.sets using gin (name gin_trgm_ops);
 
--- ============ talep görünümü (Pazar → Talepler) ============
+-- ============ talep görünümü ============
+-- /talepler canlı sorgu kullanır; eski set_demand MV kaldırıldı (12 Tem 2026).
 drop materialized view if exists public.set_demand;
-create materialized view public.set_demand as
-select
-  set_num,
-  count(*)::int as wisher_count,
-  percentile_cont(0.5) within group (order by max_price_try) as median_budget
-from public.wishlist_items
-group by set_num;
-
-create unique index if not exists set_demand_set_idx on public.set_demand (set_num);
--- Gece cron'u şunu çalıştırır: refresh materialized view concurrently public.set_demand;
 
 -- ============ RLS ============
 alter table public.users enable row level security;
