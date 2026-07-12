@@ -15,18 +15,34 @@ async function requireUser() {
   return user;
 }
 
+/** Koleksiyona ekleme + akışa otomatik "koleksiyonuna ekledi" aktivitesi. */
+async function insertCollectionWithActivity(userId: string, setNum: string) {
+  const inserted = await db()
+    .insert(schema.collectionItems)
+    .values({ userId, setNum })
+    .onConflictDoNothing()
+    .returning({ id: schema.collectionItems.id });
+
+  // Yalnızca gerçekten yeni eklendiyse aktivite üret (tekrar eklemede akış kirlenmesin)
+  if (inserted.length > 0) {
+    await db().insert(schema.posts).values({
+      authorId: userId,
+      kind: "collection_add",
+      setNum,
+    });
+  }
+}
+
 export async function addToCollection(formData: FormData) {
   const setNum = String(formData.get("setNum") ?? "");
   if (!setNum) return;
   const user = await requireUser();
 
-  await db()
-    .insert(schema.collectionItems)
-    .values({ userId: user.id, setNum })
-    .onConflictDoNothing();
+  await insertCollectionWithActivity(user.id, setNum);
 
   revalidatePath(`/setler/${setNum}`);
   revalidatePath("/koleksiyon");
+  revalidatePath("/");
 }
 
 export async function removeFromCollection(formData: FormData) {
@@ -166,11 +182,9 @@ export async function wishToCollection(formData: FormData) {
         eq(schema.wishlistItems.setNum, setNum)
       )
     );
-  await db()
-    .insert(schema.collectionItems)
-    .values({ userId: user.id, setNum })
-    .onConflictDoNothing();
+  await insertCollectionWithActivity(user.id, setNum);
 
   revalidatePath(`/setler/${setNum}`);
   revalidatePath("/koleksiyon");
+  revalidatePath("/");
 }

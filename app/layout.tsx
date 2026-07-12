@@ -62,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Brand />
           <nav>
             <Link href="/setler">Setler</Link>
+            <Link href="/uyeler">Üyeler</Link>
             <Suspense fallback={null}>
               <AuthNav />
             </Suspense>
