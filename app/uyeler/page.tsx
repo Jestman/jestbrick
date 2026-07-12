@@ -5,6 +5,7 @@ import { db, envReady, schema } from "@/db";
 import { getUser } from "@/lib/supabase/server";
 import { follow, unfollow } from "@/lib/social/actions";
 import { Avatar, RoleBadge } from "@/app/components/Avatar";
+import { mediaUrl } from "@/lib/media";
 
 export const metadata = { title: "Üyeler" };
 
@@ -20,6 +21,7 @@ export default async function UyelerPage() {
       role: schema.users.role,
       city: schema.users.city,
       bio: schema.users.bio,
+      avatarPath: schema.users.avatarPath,
       setCount: sql<number>`(
         select count(*)::int from collection_items ci where ci.user_id = ${schema.users.id}
       )`,
@@ -44,7 +46,7 @@ export default async function UyelerPage() {
         {members.map((m) => (
           <div key={m.id} className="card" style={{ display: "flex", gap: 14, alignItems: "center", padding: "14px 18px" }}>
             <Link href={`/u/${m.handle}`}>
-              <Avatar handle={m.handle} name={m.displayName} size={48} />
+              <Avatar handle={m.handle} name={m.displayName} size={48} src={mediaUrl(m.avatarPath)} />
             </Link>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 14.5, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>

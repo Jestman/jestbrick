@@ -4,11 +4,29 @@ export function Avatar({
   handle,
   name,
   size = 40,
+  src,
 }: {
   handle: string;
   name: string;
   size?: number;
+  src?: string | null;
 }) {
+  if (src) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt=""
+        style={{
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          objectFit: "cover",
+          flex: "none",
+        }}
+      />
+    );
+  }
   const hue = avatarHue(handle);
   const initials = (name || handle)
     .split(/\s+/)
