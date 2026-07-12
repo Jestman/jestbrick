@@ -8,8 +8,11 @@
  * Görsel kopyalama (Storage) bilinçli olarak ayrı tutuldu: MVP'de image_url
  * (Rebrickable CDN) kullanılır; Faz 2'de kopyalama betiği eklenecek.
  */
-import "dotenv/config";
+import { config } from "dotenv";
 import postgres from "postgres";
+
+config({ path: ".env.local" });
+config(); // .env varsa onu da al
 
 const API = "https://rebrickable.com/api/v3/lego";
 const KEY = process.env.REBRICKABLE_API_KEY;
