@@ -117,12 +117,19 @@ async function refreshDemandView() {
   }
 }
 
-const start = Date.now();
-try {
-  await syncThemes();
-  await syncSets();
-  await refreshDemandView();
-  console.log(`Bitti — ${Math.round((Date.now() - start) / 1000)}sn.`);
-} finally {
-  await sql.end();
+async function main() {
+  const start = Date.now();
+  try {
+    await syncThemes();
+    await syncSets();
+    await refreshDemandView();
+    console.log(`Bitti — ${Math.round((Date.now() - start) / 1000)}sn.`);
+  } finally {
+    await sql.end();
+  }
 }
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
