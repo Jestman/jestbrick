@@ -38,10 +38,14 @@ export async function GET(req: Request) {
     }
 
     const sets = data.sets ?? [];
-    const withExit = sets.filter((s) => s.exitDate);
+    // Sadece güvenli karakterler dizi sabitine girer (drizzle sql'i JS dizisini
+    // tek parametre yerine ($1,$2,…) diye açtığından {a,b,c} literal kullanılır)
+    const withExit = sets.filter(
+      (s) => s.exitDate && /^[0-9]+$/.test(s.number) && Number.isInteger(s.numberVariant)
+    );
     if (withExit.length > 0) {
-      const setNums = withExit.map((s) => `${s.number}-${s.numberVariant}`);
-      const exits = withExit.map((s) => s.exitDate!.slice(0, 10));
+      const setNums = `{${withExit.map((s) => `${s.number}-${s.numberVariant}`).join(",")}}`;
+      const exits = `{${withExit.map((s) => s.exitDate!.slice(0, 10)).join(",")}}`;
       const r = await db().execute(sql`
         update sets set retired_at = v.exit
         from unnest(${setNums}::text[], ${exits}::date[]) as v(set_num, exit)
