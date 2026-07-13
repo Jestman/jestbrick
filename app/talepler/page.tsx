@@ -62,8 +62,9 @@ export default async function TaleplerPage() {
                 </div>
                 <div className="meta">
                   <b>{d.name}</b>
+                  {/* .setcard .meta b blok görünümlü — satır kırılmasın diye span */}
                   <small>
-                    🔥 <b>{d.wisherCount} kişi</b> arıyor
+                    🔥 <span style={{ fontWeight: 800, color: "var(--ink)" }}>{d.wisherCount} kişi</span> arıyor
                     {d.medianBudget ? ` · bütçe ~${Number(d.medianBudget).toLocaleString("tr-TR")} ₺` : ""}
                   </small>
                   {d.inMyCollection && (

@@ -50,7 +50,7 @@ export default async function UyelerPage() {
             <Link href={`/u/${m.handle}`}>
               <Avatar handle={m.handle} name={m.displayName} size={48} src={mediaUrl(m.avatarPath)} />
             </Link>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
               <div style={{ fontWeight: 700, fontSize: 14.5, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <Link href={`/u/${m.handle}`} style={{ color: "inherit" }}>
                   {m.displayName || m.handle}
