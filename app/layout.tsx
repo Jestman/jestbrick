@@ -38,7 +38,7 @@ function Brand() {
         <rect x="17" y="2" width="8" height="7" rx="2" fill="none" stroke="#20232E" strokeWidth="1.6" />
       </svg>
       {/* .logo flex olduğundan metin tek span'da kalmalı — yoksa gap araya boşluk koyar */}
-      <span>Jest<b>Brick</b></span>
+      <span>Jest<b>Brick</b><sup className="beta-tag">BETA</sup></span>
     </Link>
   );
 }
@@ -220,7 +220,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="sf-inner">
             <div className="sf-brand">
               <b>JestBrick</b>
-              <p>LEGO® koleksiyoncularının buluşma noktası. Beta.</p>
+              <p>Koleksiyoncuların buluşma noktası. Beta.</p>
             </div>
             <nav className="sf-links" aria-label="Site bilgileri">
               <Link href="/hakkimizda">Hakkımızda</Link>
@@ -232,8 +232,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <p className="sf-legal">
             LEGO® ve Minifigür, LEGO Group'un tescilli markalarıdır. JestBrick bağımsız bir hayran
             platformudur; LEGO Group tarafından desteklenmez, onaylanmaz ve LEGO Group ile bağlantısı
-            yoktur. Katalog verileri <a href="https://rebrickable.com" rel="noopener">Rebrickable</a> ve{" "}
-            <a href="https://brickset.com" rel="noopener">Brickset</a> kaynaklıdır.
+            yoktur.
           </p>
         </footer>
         <Analytics />

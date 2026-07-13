@@ -626,3 +626,22 @@ img { max-width: 100%; }
   border-top: 1px solid var(--line);
   padding-top: 14px;
 }
+
+/* footer her zaman sayfanın dibinde (kısa sayfalarda da) */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+.site-footer { margin-top: auto; }
+
+/* logo yanında üs gibi BETA rozeti */
+.beta-tag {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--red);
+  vertical-align: super;
+  margin-left: 3px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}

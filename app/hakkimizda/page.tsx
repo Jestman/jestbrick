@@ -26,7 +26,9 @@ export default function HakkimizdaPage() {
         <p style={{ fontSize: 12.5, color: "var(--ink3)" }}>
           JestBrick bağımsız bir hayran platformudur; LEGO Group ile bağlantısı yoktur, LEGO Group
           tarafından desteklenmez ve onaylanmaz. LEGO® ve Minifigür, LEGO Group'un tescilli
-          markalarıdır.
+          markalarıdır. Katalog verileri{" "}
+          <a href="https://rebrickable.com" target="_blank" rel="noopener">Rebrickable</a> ve{" "}
+          <a href="https://brickset.com" target="_blank" rel="noopener">Brickset</a> kaynaklıdır.
         </p>
       </div>
     </main>
