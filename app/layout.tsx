@@ -15,6 +15,7 @@ import { Avatar } from "./components/Avatar";
 import { mediaUrl } from "@/lib/media";
 import { timeAgo } from "@/lib/format";
 import { NavShell } from "./components/NavShell";
+import { SearchBox } from "./components/SearchBox";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://jestbrick.com"),
@@ -36,7 +37,8 @@ function Brand() {
         <rect x="5" y="2" width="8" height="7" rx="2" fill="none" stroke="#20232E" strokeWidth="1.6" />
         <rect x="17" y="2" width="8" height="7" rx="2" fill="none" stroke="#20232E" strokeWidth="1.6" />
       </svg>
-      Jest<b>Brick</b>
+      {/* .logo flex olduğundan metin tek span'da kalmalı — yoksa gap araya boşluk koyar */}
+      <span>Jest<b>Brick</b></span>
     </Link>
   );
 }
@@ -202,13 +204,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="topbar">
           <Brand />
-          <form action="/setler" className="nav-search" role="search">
-            <input name="q" placeholder="🔍 Set ara…" autoComplete="off" aria-label="Set ara" />
-          </form>
+          <SearchBox className="nav-search" />
           <NavShell>
-            <form action="/setler" className="nav-search-m" role="search">
-              <input name="q" placeholder="🔍 Set ara…" autoComplete="off" aria-label="Set ara" />
-            </form>
+            <SearchBox className="nav-search-m" />
             <Suspense fallback={null}>
               <SectionNav />
             </Suspense>
@@ -218,6 +216,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </NavShell>
         </header>
         {children}
+        <footer className="site-footer">
+          <div className="sf-inner">
+            <div className="sf-brand">
+              <b>JestBrick</b>
+              <p>LEGO® koleksiyoncularının buluşma noktası. Beta.</p>
+            </div>
+            <nav className="sf-links" aria-label="Site bilgileri">
+              <Link href="/hakkimizda">Hakkımızda</Link>
+              <Link href="/iletisim">İletişim</Link>
+              <Link href="/kurallar">Kurallar &amp; Kullanım Şartları</Link>
+              <Link href="/gizlilik">Gizlilik (KVKK)</Link>
+            </nav>
+          </div>
+          <p className="sf-legal">
+            LEGO® ve Minifigür, LEGO Group'un tescilli markalarıdır. JestBrick bağımsız bir hayran
+            platformudur; LEGO Group tarafından desteklenmez, onaylanmaz ve LEGO Group ile bağlantısı
+            yoktur. Katalog verileri <a href="https://rebrickable.com" rel="noopener">Rebrickable</a> ve{" "}
+            <a href="https://brickset.com" rel="noopener">Brickset</a> kaynaklıdır.
+          </p>
+        </footer>
         <Analytics />
       </body>
     </html>

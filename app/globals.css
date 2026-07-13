@@ -566,3 +566,63 @@ img { max-width: 100%; }
   background-image: radial-gradient(circle at 12px 12px, rgba(32, 35, 46, 0.10) 5px, transparent 6px);
   background-size: 34px 34px;
 }
+
+/* ---- canlı arama önerileri ---- */
+.search-suggest {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  min-width: 300px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(32, 35, 46, 0.14);
+  overflow: hidden;
+  z-index: 70;
+}
+.search-suggest-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 13px;
+  font-size: 13.5px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.search-suggest-row:last-child { border-bottom: none; }
+.search-suggest-row:hover { background: var(--soft); text-decoration: none; }
+@media (max-width: 1080px) {
+  .nav-search-m .search-suggest { min-width: 0; }
+}
+
+/* ---- footer ---- */
+.site-footer {
+  border-top: 1px solid var(--line);
+  background: var(--card);
+  margin-top: 40px;
+  padding: 28px 20px 22px;
+}
+.sf-inner {
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.sf-brand b { font-family: var(--disp); font-size: 17px; }
+.sf-brand p { font-size: 12.5px; color: var(--ink3); margin-top: 3px; }
+.sf-links { display: flex; gap: 18px; flex-wrap: wrap; }
+.sf-links a { font-size: 13px; font-weight: 600; color: var(--ink2); }
+.sf-legal {
+  max-width: 980px;
+  margin: 18px auto 0;
+  font-size: 11.5px;
+  color: var(--ink3);
+  line-height: 1.6;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}

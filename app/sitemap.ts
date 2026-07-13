@@ -18,6 +18,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/forum`, changeFrequency: "hourly", priority: 0.9 },
     { url: `${BASE}/talepler`, changeFrequency: "daily", priority: 0.7 },
     { url: `${BASE}/uyeler`, changeFrequency: "daily", priority: 0.5 },
+    { url: `${BASE}/hakkimizda`, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${BASE}/iletisim`, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${BASE}/kurallar`, changeFrequency: "monthly", priority: 0.3 },
+    { url: `${BASE}/gizlilik`, changeFrequency: "monthly", priority: 0.3 },
   ];
   if (!envReady()) return statics;
 
