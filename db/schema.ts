@@ -291,6 +291,13 @@ export const topicPosts = pgTable(
   (t) => [index("topic_posts_topic_idx").on(t.topicId, t.createdAt)]
 );
 
+export const topicPostMedia = pgTable("topic_post_media", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  topicPostId: uuid("topic_post_id").notNull().references(() => topicPosts.id, { onDelete: "cascade" }),
+  storagePath: text("storage_path").notNull(),
+  position: smallint("position").notNull().default(0),
+});
+
 /* ---------------- pazar ---------------- */
 
 export const listings = pgTable(

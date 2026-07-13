@@ -224,6 +224,17 @@ create policy topic_posts_write_own on public.topic_posts for insert
     and not exists (select 1 from public.topics t where t.id = topic_id and t.locked)
   );
 
+-- forum mesajı fotoğrafları (13 Tem 2026)
+create table if not exists public.topic_post_media (
+  id uuid primary key default gen_random_uuid(),
+  topic_post_id uuid not null references public.topic_posts(id) on delete cascade,
+  storage_path text not null,
+  position smallint not null default 0
+);
+alter table public.topic_post_media enable row level security;
+drop policy if exists topic_post_media_read on public.topic_post_media;
+create policy topic_post_media_read on public.topic_post_media for select using (true);
+
 -- yanıt gelince başlığı öne al
 create or replace function public.bump_topic_last_post()
 returns trigger language plpgsql security definer set search_path = public as $$

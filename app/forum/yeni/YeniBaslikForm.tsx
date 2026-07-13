@@ -54,6 +54,14 @@ export function YeniBaslikForm({
         />
       </label>
 
+      <label style={{ fontSize: 13.5, fontWeight: 700 }}>
+        Fotoğraflar <span style={{ fontWeight: 400, color: "var(--ink3)" }}>(en fazla 4 · isteğe bağlı)</span>
+        <input
+          name="photos" type="file" accept="image/*" multiple
+          style={{ ...inputStyle, marginTop: 5, padding: "8px 10px" }}
+        />
+      </label>
+
       {state?.error && (
         <div className="notice" style={{ borderColor: "var(--red)", color: "var(--red)" }}>
           {state.error}

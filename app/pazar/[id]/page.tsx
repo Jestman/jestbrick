@@ -25,6 +25,28 @@ const STATUS_TR: Record<string, { label: string; color: string }> = {
   removed: { label: "Kaldırıldı", color: "var(--ink3)" },
 };
 
+/** Google: ilan metadata'sı — "lego 21319 satılık" aramaları hedefi. */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  if (!envReady() || !/^[0-9a-f-]{36}$/.test(id)) return {};
+  const row = await getListing(id);
+  if (!row || row.listing.status === "removed") return {};
+  const l = row.listing;
+  const no = l.setNum.replace(/-1$/, "");
+  const title = `Satılık LEGO ${no} ${row.setName} — ${Number(l.priceTry).toLocaleString("tr-TR")} ₺`;
+  const description = `${CONDITION_TR[l.condition]} LEGO ${no} ${row.setName}${l.city ? `, ${l.city}` : ""}${
+    l.ships ? ", kargoyla gönderilir" : ""
+  }. Koleksiyoncudan koleksiyoncuya, satıcı puanlı güvenli ilan — JestBrick Pazar.`;
+  const img = row.imagePath ?? row.imageUrl;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/pazar/${id}` },
+    openGraph: { title, description, images: img ? [{ url: img }] : undefined },
+    ...(l.status === "sold" ? { robots: { index: false } } : {}),
+  };
+}
+
 export default async function IlanDetayPage({
   params,
 }: {
@@ -70,8 +92,29 @@ export default async function IlanDetayPage({
     alreadyRated = r.length > 0;
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: `LEGO ${l.setNum.replace(/-1$/, "")} ${row.setName}`,
+    image: img ?? undefined,
+    description: l.description || `${CONDITION_TR[l.condition]} LEGO seti.`,
+    offers: {
+      "@type": "Offer",
+      price: Number(l.priceTry),
+      priceCurrency: "TRY",
+      itemCondition:
+        l.condition === "sealed"
+          ? "https://schema.org/NewCondition"
+          : "https://schema.org/UsedCondition",
+      availability:
+        l.status === "active" ? "https://schema.org/InStock" : "https://schema.org/SoldOut",
+      seller: { "@type": "Person", name: row.sellerName || row.sellerHandle },
+    },
+  };
+
   return (
     <main className="wrap" style={{ maxWidth: 720 }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Link href="/pazar" style={{ fontSize: 13.5, fontWeight: 600 }}>← Pazara dön</Link>
 
       <div className="card" style={{ marginTop: 14, padding: 0, overflow: "hidden" }}>

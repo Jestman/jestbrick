@@ -9,12 +9,16 @@ import { signOut } from "@/lib/auth/actions";
 import { unreadConversationCount } from "@/lib/messages/helpers";
 import { currentRole, isModerator } from "@/lib/admin/guards";
 import { getFlags } from "@/lib/settings";
+import { Analytics } from "@vercel/analytics/next";
 import { NavShell } from "./components/NavShell";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://jestbrick.com"),
   title: { default: "JestBrick — LEGO Koleksiyoncu Ağı", template: "%s · JestBrick" },
   description:
     "Koleksiyonunu sergile, istek listeni paylaş, seti olanla arayanı buluştur. LEGO koleksiyoncularının buluşma noktası.",
+  openGraph: { siteName: "JestBrick", locale: "tr_TR", type: "website" },
+  robots: { index: true, follow: true },
 };
 
 function Brand() {
@@ -132,6 +136,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </NavShell>
         </header>
         {children}
+        <Analytics />
       </body>
     </html>
   );

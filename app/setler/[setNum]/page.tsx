@@ -18,6 +18,39 @@ import { Avatar } from "@/app/components/Avatar";
 import { mediaUrl } from "@/lib/media";
 import { BulkForm } from "./BulkForm";
 
+/** Google: set sayfası metadata'sı — "LEGO 21319 Central Perk" aramaları hedefi. */
+export async function generateMetadata({ params }: { params: Promise<{ setNum: string }> }) {
+  const { setNum } = await params;
+  if (!envReady()) return {};
+  const [s] = await db()
+    .select({
+      name: schema.sets.name,
+      year: schema.sets.year,
+      numParts: schema.sets.numParts,
+      imageUrl: schema.sets.imageUrl,
+      imagePath: schema.sets.imagePath,
+      retiredAt: schema.sets.retiredAt,
+      themeName: schema.themes.name,
+    })
+    .from(schema.sets)
+    .leftJoin(schema.themes, eq(schema.sets.themeId, schema.themes.id))
+    .where(eq(schema.sets.setNum, setNum))
+    .limit(1);
+  if (!s) return {};
+  const no = setNum.replace(/-1$/, "");
+  const title = `LEGO ${no} ${s.name}`;
+  const description = `LEGO ${no} ${s.name} (${s.themeName ?? "LEGO"}, ${s.year}) — ${s.numParts.toLocaleString(
+    "tr-TR"
+  )} parça${s.retiredAt ? ", emekli set" : ""}. Kimlerde var, kimler arıyor, satılık ilanlar ve güncel durum JestBrick'te.`;
+  const img = s.imagePath ?? s.imageUrl;
+  return {
+    title,
+    description,
+    alternates: { canonical: `/setler/${setNum}` },
+    openGraph: { title, description, images: img ? [{ url: img }] : undefined },
+  };
+}
+
 async function ActionButtons({ setNum }: { setNum: string }) {
   const user = await getUser();
   if (!user) {
@@ -320,8 +353,37 @@ export default async function SetDetayPage({
   const s = row.set;
   const img = s.imagePath ?? s.imageUrl;
 
+  // Google Product yapısal verisi: aktif ilanlar teklife dönüşür
+  const offers = await db()
+    .select({ priceTry: schema.listings.priceTry })
+    .from(schema.listings)
+    .where(and(eq(schema.listings.setNum, setNum), eq(schema.listings.status, "active")));
+  const no = setNum.replace(/-1$/, "");
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: `LEGO ${no} ${s.name}`,
+    sku: no,
+    brand: { "@type": "Brand", name: "LEGO" },
+    image: img ?? undefined,
+    description: `${s.numParts.toLocaleString("tr-TR")} parçalı ${s.year} çıkışlı LEGO seti${s.retiredAt ? " (emekli)" : ""}.`,
+    ...(offers.length > 0
+      ? {
+          offers: {
+            "@type": "AggregateOffer",
+            priceCurrency: "TRY",
+            lowPrice: Math.min(...offers.map((o) => Number(o.priceTry))),
+            highPrice: Math.max(...offers.map((o) => Number(o.priceTry))),
+            offerCount: offers.length,
+            availability: "https://schema.org/InStock",
+          },
+        }
+      : {}),
+  };
+
   return (
     <main className="wrap" style={{ maxWidth: 760 }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Link href="/setler" style={{ fontSize: 13.5, fontWeight: 600 }}>
         ← Kataloğa dön
       </Link>
