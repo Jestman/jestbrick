@@ -16,6 +16,7 @@ import { mediaUrl } from "@/lib/media";
 import { timeAgo } from "@/lib/format";
 import { NavShell } from "./components/NavShell";
 import { SearchBox } from "./components/SearchBox";
+import { ImgFallback } from "./components/ImgFallback";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://jestbrick.com"),
@@ -235,6 +236,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             yoktur.
           </p>
         </footer>
+        <ImgFallback />
         <Analytics />
       </body>
     </html>
