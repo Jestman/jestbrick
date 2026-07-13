@@ -22,11 +22,13 @@ export default async function UyelerPage() {
       city: schema.users.city,
       bio: schema.users.bio,
       avatarPath: schema.users.avatarPath,
+      // NOT: alt sorguda ${schema.users.id} niteliksiz "id" basar ve alt
+      // sorgunun tablosuna çözülür — elle nitele (bilinen drizzle tuzağı).
       setCount: sql<number>`(
-        select count(*)::int from collection_items ci where ci.user_id = ${schema.users.id}
+        select count(*)::int from collection_items ci where ci.user_id = users.id
       )`,
       followerCount: sql<number>`(
-        select count(*)::int from follows f where f.followee_id = ${schema.users.id}
+        select count(*)::int from follows f where f.followee_id = users.id
       )`,
       followedByMe: viewer
         ? sql<boolean>`exists (
