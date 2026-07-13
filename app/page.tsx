@@ -7,6 +7,7 @@ import { Avatar, RoleBadge } from "@/app/components/Avatar";
 import { timeAgo } from "@/lib/format";
 import { mediaUrl } from "@/lib/media";
 import { HomeSide } from "./HomeSide";
+import { PendingButton } from "./components/PendingButton";
 
 async function LandingStats() {
   const [row] = await db()
@@ -83,7 +84,7 @@ function Landing() {
           </div>
 
           <div className="home-grid">
-            <div className="card" style={{ padding: "22px 26px", textAlign: "center", background: "var(--yellow-soft)", alignSelf: "stretch" }}>
+            <div className="card studs" style={{ padding: "22px 26px", textAlign: "center", background: "var(--yellow-soft)", alignSelf: "stretch" }}>
               <b style={{ fontFamily: "var(--disp)", fontSize: 17 }}>Topluluk şimdiden dönüyor 🧱</b>
               <p style={{ fontSize: 14, color: "var(--ink2)", margin: "8px 0 14px" }}>
                 Yandakiler canlı: ilanlar, forum konuları, yeni katılanlar. Sen de yerini al.
@@ -118,9 +119,9 @@ function Composer({ me }: { me: { handle: string; name: string; avatar: string |
           📷 Fotoğraf ekle (en fazla 4)
           <input type="file" name="photos" accept="image/*" multiple style={{ display: "block", fontSize: 12, marginTop: 4, width: "100%" }} />
         </label>
-        <button className="btn btn-y" type="submit" style={{ marginLeft: "auto" }}>
+        <PendingButton style={{ marginLeft: "auto" }} pendingText="Paylaşılıyor…">
           Paylaş
-        </button>
+        </PendingButton>
       </div>
     </form>
   );
@@ -343,13 +344,56 @@ async function Feed({ userId }: { userId: string }) {
                   borderRadius: 99, padding: "8px 14px", outline: "none",
                 }}
               />
-              <button className="btn btn-y" type="submit" style={{ padding: "7px 14px", fontSize: 13 }}>
+              <PendingButton style={{ padding: "7px 14px", fontSize: 13 }} pendingText="…">
                 Gönder
-              </button>
+              </PendingButton>
             </form>
           </article>
         );
       })}
+    </div>
+  );
+}
+
+/** Yeni üye pusulası: 3 adımlık başlangıç kartı — hepsi bitince kaybolur. */
+async function OnboardingCard({ userId, handle }: { userId: string; handle: string }) {
+  const [row] = await db()
+    .select({
+      sets: sql<number>`(select count(*)::int from collection_items ci where ci.user_id = ${userId})`,
+      wishes: sql<number>`(select count(*)::int from wishlist_items wi where wi.user_id = ${userId})`,
+      profileDone: sql<boolean>`(select (u.bio <> '' or u.avatar_path is not null) from users u where u.id = ${userId})`,
+    })
+    .from(sql`(select 1) as one`);
+  const steps: [boolean, string, string][] = [
+    [row.sets > 0, "İlk setini koleksiyonuna ekle", "/setler"],
+    [row.wishes > 0, "İstek listene bir set koy — eşleşince haber verelim", "/setler"],
+    [row.profileDone, "Profilini doldur (fotoğraf + birkaç satır)", "/hesap/profil"],
+  ];
+  const done = steps.filter(([ok]) => ok).length;
+  if (done === steps.length) return null;
+
+  return (
+    <div className="card" style={{ marginBottom: 18, padding: "16px 20px", borderLeft: "5px solid var(--yellow)" }}>
+      <b style={{ fontFamily: "var(--disp)", fontSize: 15 }}>
+        Hoş geldin! Vitrinini kur ({done}/{steps.length})
+      </b>
+      <div style={{ display: "flex", flexDirection: "column", gap: 7, marginTop: 10 }}>
+        {steps.map(([ok, label, href]) => (
+          <Link
+            key={label}
+            href={href}
+            style={{
+              display: "flex", gap: 9, alignItems: "center", fontSize: 13.5, color: "inherit",
+              textDecoration: ok ? "line-through" : undefined, opacity: ok ? 0.55 : 1,
+            }}
+          >
+            <span>{ok ? "✅" : "⬜"}</span> {label}
+          </Link>
+        ))}
+        <Link href={`/u/${handle}`} style={{ fontSize: 12.5, fontWeight: 600, marginTop: 4 }}>
+          Vitrinim nasıl görünüyor? →
+        </Link>
+      </div>
     </div>
   );
 }
@@ -380,6 +424,7 @@ export default async function Home() {
               Üyeleri keşfet →
             </Link>
           </div>
+          <OnboardingCard userId={user.id} handle={me.handle} />
           <Composer me={{ handle: me.handle, name: me.name, avatar: mediaUrl(me.avatar) }} />
           <Feed userId={user.id} />
         </div>

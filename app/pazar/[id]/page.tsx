@@ -10,6 +10,9 @@ import { removeListingAdmin } from "@/lib/admin/actions";
 import { reportContent } from "@/lib/reports/actions";
 import { currentRole, isModerator } from "@/lib/admin/guards";
 import { Avatar } from "@/app/components/Avatar";
+import { ConfirmSubmit } from "@/app/components/ConfirmSubmit";
+import { PendingButton } from "@/app/components/PendingButton";
+import { ZoomImg } from "@/app/components/Lightbox";
 import { mediaUrl } from "@/lib/media";
 import { timeAgo } from "@/lib/format";
 
@@ -131,13 +134,15 @@ export default async function IlanDetayPage({
         </div>
         {photos.length > 1 && (
           <div style={{ display: "flex", gap: 8, padding: "10px 14px", background: "var(--soft)", borderTop: "1px solid var(--line)", overflowX: "auto" }}>
-            {photos.map((p, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={p.storagePath} src={mediaUrl(p.storagePath) ?? undefined} alt={`Fotoğraf ${i + 1}`}
-                style={{ height: 72, borderRadius: 8, border: "1px solid var(--line)" }}
-              />
-            ))}
+            {photos.map((p, i) => {
+              const u = mediaUrl(p.storagePath);
+              return u ? (
+                <ZoomImg
+                  key={p.storagePath} src={u} alt={`Fotoğraf ${i + 1}`}
+                  style={{ height: 72, borderRadius: 8, border: "1px solid var(--line)" }}
+                />
+              ) : null;
+            })}
           </div>
         )}
 
@@ -196,7 +201,7 @@ export default async function IlanDetayPage({
             {user && !isOwner && (l.status === "active" || l.status === "reserved") && (
               <form action={contactSeller}>
                 <input type="hidden" name="listingId" value={l.id} />
-                <button className="btn btn-y" type="submit">💬 Satıcıya Mesaj</button>
+                <PendingButton pendingText="Açılıyor…">💬 Satıcıya Mesaj</PendingButton>
               </form>
             )}
             {!user && (
@@ -285,9 +290,9 @@ export default async function IlanDetayPage({
             {canMod && !isOwner && l.status !== "removed" && (
               <form action={removeListingAdmin}>
                 <input type="hidden" name="listingId" value={l.id} />
-                <button className="btn btn-o" type="submit" style={{ padding: "6px 12px", fontSize: 12.5, color: "var(--red)" }}>
+                <ConfirmSubmit className="btn btn-o" style={{ padding: "6px 12px", fontSize: 12.5, color: "var(--red)" }} confirmText="Kaldırılsın mı?">
                   🛡️ İlanı Kaldır
-                </button>
+                </ConfirmSubmit>
               </form>
             )}
           </div>
@@ -302,9 +307,15 @@ function StatusBtn({ id, to, label, primary }: { id: string; to: string; label: 
     <form action={setListingStatus}>
       <input type="hidden" name="listingId" value={id} />
       <input type="hidden" name="status" value={to} />
-      <button className={primary ? "btn btn-y" : "btn btn-o"} type="submit" style={{ padding: "7px 14px", fontSize: 13 }}>
-        {label}
-      </button>
+      {to === "removed" ? (
+        <ConfirmSubmit className="btn btn-o" style={{ padding: "7px 14px", fontSize: 13 }} confirmText="İlan kaldırılsın mı?">
+          {label}
+        </ConfirmSubmit>
+      ) : (
+        <button className={primary ? "btn btn-y" : "btn btn-o"} type="submit" style={{ padding: "7px 14px", fontSize: 13 }}>
+          {label}
+        </button>
+      )}
     </form>
   );
 }

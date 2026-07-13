@@ -55,6 +55,21 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
   redirect(after);
 }
 
+/** Şifre sıfırlama e-postası ister; hesap yoksa da başarı der (enumeration koruması). */
+export async function requestPasswordReset(
+  _prev: (AuthState & { ok?: boolean }) | undefined,
+  formData: FormData
+): Promise<AuthState & { ok?: boolean }> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email.includes("@")) return { error: "Geçerli bir e-posta gir." };
+
+  const supabase = await createClient();
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: "https://jestbrick.com/sifre-yenile",
+  });
+  return { ok: true };
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();

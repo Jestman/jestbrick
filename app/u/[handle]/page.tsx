@@ -210,7 +210,7 @@ export default async function ProfilPage({
   return (
     <main className="wrap" style={{ maxWidth: 860 }}>
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-        <div style={{ height: 120, background: `linear-gradient(120deg, hsl(${hue}, 45%, 30%), var(--ink))` }} />
+        <div className="studs" style={{ height: 120, background: `linear-gradient(120deg, hsl(${hue}, 45%, 30%), var(--ink))` }} />
         <div style={{ padding: "0 24px 22px" }}>
           <div style={{ display: "flex", alignItems: "flex-end", gap: 14, flexWrap: "wrap" }}>
             <div style={{ marginTop: -42, border: "4px solid #fff", borderRadius: "50%", lineHeight: 0 }}>

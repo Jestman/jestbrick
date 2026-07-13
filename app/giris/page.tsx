@@ -34,8 +34,11 @@ function GirisForm() {
           {pending ? "Giriş yapılıyor…" : "Giriş Yap"}
         </button>
       </form>
-      <p style={{ marginTop: 14, fontSize: 13.5, color: "var(--ink2)" }}>
-        Hesabın yok mu? <Link href="/kayit">Katıl</Link>
+      <p style={{ marginTop: 14, fontSize: 13.5, color: "var(--ink2)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 6 }}>
+        <span>
+          Hesabın yok mu? <Link href="/kayit">Katıl</Link>
+        </span>
+        <Link href="/sifre-sifirla">Şifremi unuttum</Link>
       </p>
     </div>
   );

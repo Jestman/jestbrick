@@ -6,7 +6,7 @@
   --red: #d6402b;
   --ink: #20232e;
   --ink2: #5a6072;
-  --ink3: #8b90a0;
+  --ink3: #757b8d;
   --bg: #edeff2;
   --card: #ffffff;
   --line: #e2e5ea;
@@ -309,7 +309,7 @@ img { max-width: 100%; }
 
 .nav-burger { display: none; }
 
-@media (max-width: 860px) {
+@media (max-width: 1080px) {
   /* hamburger menü */
   .nav-burger {
     display: block;
@@ -361,7 +361,7 @@ img { max-width: 100%; }
 .chat-back { display: none; }
 
 .nav-label { display: none; }
-@media (max-width: 860px) {
+@media (max-width: 1080px) {
   .nav-label { display: inline; }
 }
 
@@ -483,4 +483,86 @@ img { max-width: 100%; }
     text-align: left;
     align-items: center;
   }
+}
+
+/* ---- açılır menüler (zil + hesap) ---- */
+.dd { position: relative; }
+.dd summary {
+  list-style: none;
+  cursor: pointer;
+  color: var(--ink2);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  user-select: none;
+}
+.dd summary::-webkit-details-marker { display: none; }
+.dd summary:hover { background: var(--soft); color: var(--ink); }
+.dd-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 320px;
+  max-width: 92vw;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(32, 35, 46, 0.14);
+  overflow: hidden;
+  z-index: 60;
+}
+.dd-row {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  padding: 11px 14px;
+  font-size: 13.5px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+}
+.dd-row:last-child { border-bottom: none; }
+.dd-row:hover { background: var(--soft); text-decoration: none; }
+@media (max-width: 1080px) {
+  .dd-panel { position: static; min-width: 0; box-shadow: none; border-radius: 10px; margin: 4px 0 8px; }
+}
+
+/* ---- topbar arama ---- */
+.nav-search { flex: 1; max-width: 320px; margin-left: 8px; }
+.nav-search input, .nav-search-m input {
+  width: 100%;
+  background: var(--soft);
+  border: 1.5px solid var(--line);
+  border-radius: 99px;
+  padding: 8px 15px;
+  font-size: 13.5px;
+  outline: none;
+}
+.nav-search input:focus, .nav-search-m input:focus { border-color: var(--yellow-d); background: #fff; }
+.nav-search-m { display: none; }
+@media (max-width: 1080px) {
+  .nav-search { display: none; }
+  .nav-search-m { display: block; padding: 8px 10px 4px; }
+}
+
+/* ---- cila: mikro etkileşimler + erişilebilirlik ---- */
+.setcard, .forum-cat, .card { transition: transform 0.12s ease, box-shadow 0.12s ease; }
+.setcard:hover, .forum-cat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(32, 35, 46, 0.12);
+}
+.btn { transition: transform 0.08s ease, background 0.12s ease; }
+.btn:active { transform: scale(0.96); }
+
+:focus-visible {
+  outline: 3px solid var(--yellow-d);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* stud (çıtçıt) dokusu — jenerik nokta ızgarası, telifsiz */
+.studs {
+  background-image: radial-gradient(circle at 12px 12px, rgba(32, 35, 46, 0.10) 5px, transparent 6px);
+  background-size: 34px 34px;
 }

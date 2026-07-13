@@ -10,6 +10,9 @@ import { reportContent } from "@/lib/reports/actions";
 import { currentRole, isModerator } from "@/lib/admin/guards";
 import { Avatar, RoleBadge } from "@/app/components/Avatar";
 import { RichBody } from "@/app/components/RichBody";
+import { ConfirmSubmit } from "@/app/components/ConfirmSubmit";
+import { PendingButton } from "@/app/components/PendingButton";
+import { ZoomImg } from "@/app/components/Lightbox";
 import { mediaUrl } from "@/lib/media";
 import { timeAgo } from "@/lib/format";
 
@@ -172,10 +175,7 @@ export default async function KonuPage({
                 {photos.length > 0 && (
                   <div className="fp-photos">
                     {photos.map((url, j) => (
-                      <a key={j} href={url} target="_blank" rel="noopener">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={url} alt={`Fotoğraf ${j + 1}`} loading="lazy" />
-                      </a>
+                      <ZoomImg key={j} src={url} alt={`Fotoğraf ${j + 1}`} />
                     ))}
                   </div>
                 )}
@@ -195,9 +195,12 @@ export default async function KonuPage({
                     <form action={deleteTopicPost}>
                       <input type="hidden" name="postId" value={p.id} />
                       <input type="hidden" name="topicId" value={t.id} />
-                      <button type="submit" style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--red)", fontWeight: 700 }}>
+                      <ConfirmSubmit
+                        className="" confirmText="Silinsin mi?"
+                        style={{ background: "none", border: "none", cursor: "pointer", fontSize: 12, color: "var(--red)", fontWeight: 700, padding: "2px 8px", borderRadius: 6 }}
+                      >
                         🗑 Sil
-                      </button>
+                      </ConfirmSubmit>
                     </form>
                   )}
                 </div>
@@ -224,7 +227,7 @@ export default async function KonuPage({
               📷 Fotoğraf ekle (en fazla 4)
               <input type="file" name="photos" accept="image/*" multiple style={{ display: "block", fontSize: 12, marginTop: 4, width: "100%" }} />
             </label>
-            <button className="btn btn-y" type="submit">Yanıtla</button>
+            <PendingButton pendingText="Gönderiliyor…">Yanıtla</PendingButton>
           </div>
         </form>
       ) : t.locked ? (
@@ -244,9 +247,15 @@ function ModBtn({ topicId, op, label }: { topicId: string; op: string; label: st
     <form action={modTopic} style={{ display: "inline" }}>
       <input type="hidden" name="topicId" value={topicId} />
       <input type="hidden" name="op" value={op} />
-      <button className="btn btn-o" type="submit" style={{ padding: "5px 11px", fontSize: 12 }}>
-        {label}
-      </button>
+      {op === "delete" ? (
+        <ConfirmSubmit className="btn btn-o" style={{ padding: "5px 11px", fontSize: 12 }} confirmText="Kalıcı silinsin mi?">
+          {label}
+        </ConfirmSubmit>
+      ) : (
+        <button className="btn btn-o" type="submit" style={{ padding: "5px 11px", fontSize: 12 }}>
+          {label}
+        </button>
+      )}
     </form>
   );
 }

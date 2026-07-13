@@ -5,6 +5,7 @@ import { db, envReady, schema } from "@/db";
 import { getUser } from "@/lib/supabase/server";
 import { sendMessage } from "@/lib/messages/actions";
 import { Avatar } from "@/app/components/Avatar";
+import { PendingButton } from "@/app/components/PendingButton";
 import { mediaUrl } from "@/lib/media";
 import { timeAgo } from "@/lib/format";
 import { LiveRefresh } from "./LiveRefresh";
@@ -221,7 +222,7 @@ export default async function MesajlarPage({
                     autoComplete="off"
                     style={{ flex: 1, background: "var(--soft)", border: "1px solid var(--line)", borderRadius: 99, padding: "10px 16px", outline: "none" }}
                   />
-                  <button className="btn btn-y" type="submit">Gönder</button>
+                  <PendingButton pendingText="…">Gönder</PendingButton>
                 </form>
               </>
             ) : (

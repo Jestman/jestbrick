@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { asc, eq } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
 import { getUser } from "@/lib/supabase/server";
+import { ConfirmSubmit } from "@/app/components/ConfirmSubmit";
 import {
   removeFromCollection,
   removeFromWishlist,
@@ -265,9 +266,9 @@ export default async function KoleksiyonPage({
                   </form>
                   <form action={removeFromCollection} style={{ padding: "0 14px 12px" }}>
                     <input type="hidden" name="setNum" value={s.setNum} />
-                    <button className="btn btn-o" style={{ padding: "5px 12px", fontSize: 12.5 }} type="submit">
+                    <ConfirmSubmit className="btn btn-o" style={{ padding: "5px 12px", fontSize: 12.5 }} confirmText="Koleksiyondan çıksın mı?">
                       Çıkar
-                    </button>
+                    </ConfirmSubmit>
                   </form>
                 </div>
               ))}

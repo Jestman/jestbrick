@@ -10,6 +10,10 @@ import { unreadConversationCount } from "@/lib/messages/helpers";
 import { currentRole, isModerator } from "@/lib/admin/guards";
 import { getFlags } from "@/lib/settings";
 import { Analytics } from "@vercel/analytics/next";
+import { desc } from "drizzle-orm";
+import { Avatar } from "./components/Avatar";
+import { mediaUrl } from "@/lib/media";
+import { timeAgo } from "@/lib/format";
 import { NavShell } from "./components/NavShell";
 
 export const metadata: Metadata = {
@@ -53,6 +57,65 @@ function NavBadge({ n }: { n: number }) {
   );
 }
 
+const NOTIF_TEXT: Record<string, string> = {
+  follow: "seni takip etmeye başladı",
+  like: "paylaşımını beğendi",
+  comment: "paylaşımına yorum yaptı",
+  wishlist_listing: "istek listendeki set için ilan açtı",
+  listing_interest: "ilanınla ilgileniyor",
+  demand_on_owned: "koleksiyonundaki bir seti arıyor",
+  reply: "başlığına yanıt yazdı",
+};
+const NOTIF_ICON: Record<string, string> = {
+  follow: "👤", like: "❤️", comment: "💬",
+  wishlist_listing: "🏷️", listing_interest: "🙋", demand_on_owned: "🔥", reply: "↩️",
+};
+
+/** Zil: son 5 bildirimi açılır panelde gösterir (tamamı /bildirimler'de). */
+async function NotifBell({ userId, unread }: { userId: string; unread: number }) {
+  const items = await db()
+    .select()
+    .from(schema.notifications)
+    .where(eq(schema.notifications.userId, userId))
+    .orderBy(desc(schema.notifications.createdAt))
+    .limit(5);
+
+  return (
+    <details className="dd">
+      <summary title="Bildirimler" aria-label="Bildirimler">
+        🔔<span className="nav-label"> Bildirimler</span>
+        <NavBadge n={unread} />
+      </summary>
+      <div className="dd-panel">
+        {items.length === 0 ? (
+          <p style={{ padding: "12px 14px", fontSize: 13, color: "var(--ink3)" }}>Henüz bildirimin yok.</p>
+        ) : (
+          items.map((n) => {
+            const p = (n.payload ?? {}) as Record<string, string>;
+            return (
+              <Link
+                key={n.id}
+                href={p.listingId ? `/pazar/${p.listingId}` : p.topicId ? `/forum/konu/${p.topicId}` : "/bildirimler"}
+                className="dd-row"
+                style={{ fontWeight: n.readAt ? 400 : 700 }}
+              >
+                <span style={{ flex: "none" }}>{NOTIF_ICON[n.type] ?? "🔔"}</span>
+                <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {p.actorName || p.actorHandle || "JestBrick"} {NOTIF_TEXT[n.type] ?? ""}
+                </span>
+                <small style={{ color: "var(--ink3)", flex: "none" }}>{timeAgo(n.createdAt)}</small>
+              </Link>
+            );
+          })
+        )}
+        <Link href="/bildirimler" className="dd-row" style={{ justifyContent: "center", fontWeight: 700, fontSize: 13 }}>
+          Tümünü gör →
+        </Link>
+      </div>
+    </details>
+  );
+}
+
 async function AuthNav() {
   if (!envReady()) return null;
   const user = await getUser();
@@ -67,13 +130,18 @@ async function AuthNav() {
     );
   }
 
-  const [unreadMsgs, [{ unreadNotifs }], me] = await Promise.all([
+  const [unreadMsgs, [{ unreadNotifs }], me, [meRow]] = await Promise.all([
     unreadConversationCount(user.id),
     db()
       .select({ unreadNotifs: count() })
       .from(schema.notifications)
       .where(and(eq(schema.notifications.userId, user.id), isNull(schema.notifications.readAt))),
     currentRole(),
+    db()
+      .select({ handle: schema.users.handle, name: schema.users.displayName, avatar: schema.users.avatarPath })
+      .from(schema.users)
+      .where(eq(schema.users.id, user.id))
+      .limit(1),
   ]);
 
   return (
@@ -84,16 +152,24 @@ async function AuthNav() {
         Mesajlar
         <NavBadge n={unreadMsgs} />
       </Link>
-      <Link href="/bildirimler" title="Bildirimler" aria-label="Bildirimler">
-        🔔<span className="nav-label"> Bildirimler</span>
-        <NavBadge n={unreadNotifs} />
-      </Link>
-      <Link href="/hesap/profil">Hesabım</Link>
-      <form action={signOut} style={{ display: "inline" }}>
-        <button className="btn btn-o" style={{ padding: "7px 14px", fontSize: 13 }}>
-          Çıkış
-        </button>
-      </form>
+      <NotifBell userId={user.id} unread={unreadNotifs} />
+      <details className="dd">
+        <summary title="Hesap menüsü" aria-label="Hesap menüsü" style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
+          <Avatar handle={meRow?.handle ?? "ben"} name={meRow?.name ?? ""} size={28} src={mediaUrl(meRow?.avatar ?? null)} />
+          <span className="nav-label">{meRow?.name || meRow?.handle}</span>
+          <span aria-hidden style={{ fontSize: 10, color: "var(--ink3)" }}>▾</span>
+        </summary>
+        <div className="dd-panel" style={{ minWidth: 200 }}>
+          <Link href={`/u/${meRow?.handle}`} className="dd-row">👤 Profilim</Link>
+          <Link href="/pazar/ilanlarim" className="dd-row">🏷️ İlanlarım</Link>
+          <Link href="/hesap/profil" className="dd-row">⚙️ Hesap Ayarları</Link>
+          <form action={signOut} style={{ display: "block", borderTop: "1px solid var(--line)" }}>
+            <button className="dd-row" style={{ width: "100%", background: "none", border: "none", textAlign: "left", fontSize: 14 }}>
+              🚪 Çıkış
+            </button>
+          </form>
+        </div>
+      </details>
     </>
   );
 }
@@ -126,7 +202,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="topbar">
           <Brand />
+          <form action="/setler" className="nav-search" role="search">
+            <input name="q" placeholder="🔍 Set ara…" autoComplete="off" aria-label="Set ara" />
+          </form>
           <NavShell>
+            <form action="/setler" className="nav-search-m" role="search">
+              <input name="q" placeholder="🔍 Set ara…" autoComplete="off" aria-label="Set ara" />
+            </form>
             <Suspense fallback={null}>
               <SectionNav />
             </Suspense>

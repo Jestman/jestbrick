@@ -41,6 +41,7 @@ export async function addToCollection(formData: FormData) {
   await insertCollectionWithActivity(user.id, setNum);
 
   revalidatePath(`/setler/${setNum}`);
+  revalidatePath("/setler"); // katalog kartındaki hızlı ekle rozeti tazelensin
   revalidatePath("/koleksiyon");
   revalidatePath("/");
 }
@@ -185,6 +186,7 @@ export async function wishToCollection(formData: FormData) {
   await insertCollectionWithActivity(user.id, setNum);
 
   revalidatePath(`/setler/${setNum}`);
+  revalidatePath("/setler"); // katalog kartındaki hızlı ekle rozeti tazelensin
   revalidatePath("/koleksiyon");
   revalidatePath("/");
 }

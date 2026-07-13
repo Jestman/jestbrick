@@ -17,6 +17,8 @@ import { wishersOf } from "@/lib/matching/queries";
 import { Avatar } from "@/app/components/Avatar";
 import { mediaUrl } from "@/lib/media";
 import { BulkForm } from "./BulkForm";
+import { ConfirmSubmit } from "@/app/components/ConfirmSubmit";
+import { PendingButton } from "@/app/components/PendingButton";
 
 /** Google: set sayfası metadata'sı — "LEGO 21319 Central Perk" aramaları hedefi. */
 export async function generateMetadata({ params }: { params: Promise<{ setNum: string }> }) {
@@ -91,7 +93,7 @@ async function ActionButtons({ setNum }: { setNum: string }) {
           <form action={removeFromCollection} style={{ display: "flex", gap: 10, alignItems: "center" }}>
             <input type="hidden" name="setNum" value={setNum} />
             <span style={{ color: "var(--green)", fontWeight: 700, fontSize: 14 }}>✓ Koleksiyonunda</span>
-            <button className="btn btn-o" type="submit">Çıkar</button>
+            <ConfirmSubmit className="btn btn-o" confirmText="Çıksın mı?">Çıkar</ConfirmSubmit>
           </form>
           <Link href={`/pazar/yeni?set=${setNum}`} className="btn btn-o">
             🏷️ Satışa Çıkar
@@ -311,9 +313,9 @@ async function WishersSection({ setNum, setName }: { setNum: string; setName: st
                   name="text"
                   value={`Merhaba! İstek listende ${setName} (#${setNum.replace(/-1$/, "")}) görünüyor — bende var, ilgilenirsen konuşalım 🧱`}
                 />
-                <button className="btn btn-o" type="submit" style={{ padding: "6px 14px", fontSize: 13 }}>
+                <PendingButton className="btn btn-o" style={{ padding: "6px 14px", fontSize: 13 }} pendingText="…">
                   Mesaj
-                </button>
+                </PendingButton>
               </form>
             )}
           </div>
