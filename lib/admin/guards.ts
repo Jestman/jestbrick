@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
@@ -6,8 +7,8 @@ import { getUser } from "@/lib/supabase/server";
 
 export type Role = (typeof schema.userRole.enumValues)[number];
 
-/** Girişli kullanıcının rolünü döndürür (girişsizse null). */
-export async function currentRole(): Promise<{ userId: string; role: Role } | null> {
+/** Girişli kullanıcının rolünü döndürür (girişsizse null; istek başına 1 sorgu). */
+export const currentRole = cache(async (): Promise<{ userId: string; role: Role } | null> => {
   const user = await getUser();
   if (!user) return null;
   const [row] = await db()
@@ -15,7 +16,7 @@ export async function currentRole(): Promise<{ userId: string; role: Role } | nu
     .from(schema.users)
     .where(eq(schema.users.id, user.id));
   return row ? { userId: user.id, role: row.role } : null;
-}
+});
 
 export function isModerator(role: Role) {
   return role === "moderator" || role === "staff";

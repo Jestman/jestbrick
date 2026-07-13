@@ -1,5 +1,5 @@
 import "server-only";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 
 /**
@@ -34,34 +34,18 @@ export async function findOrCreateDirect(meId: string, otherId: string): Promise
   return conv.id;
 }
 
-/** Nav rozeti: okunmamış mesajı olan konuşma sayısı. */
+/** Nav rozeti: okunmamış mesajı olan konuşma sayısı (tek sorgu). */
 export async function unreadConversationCount(userId: string): Promise<number> {
-  const parts = await db()
-    .select({
-      conversationId: schema.conversationParticipants.conversationId,
-      lastReadAt: schema.conversationParticipants.lastReadAt,
-    })
-    .from(schema.conversationParticipants)
-    .where(eq(schema.conversationParticipants.userId, userId));
-  if (parts.length === 0) return 0;
-
-  const convIds = parts.map((p) => p.conversationId);
-  const rows = await db()
-    .select({
-      conversationId: schema.messages.conversationId,
-      lastOtherMsgAt: sql<string | null>`max(${schema.messages.createdAt})
-        filter (where ${schema.messages.senderId} <> ${userId})`,
-    })
-    .from(schema.messages)
-    .where(inArray(schema.messages.conversationId, convIds))
-    .groupBy(schema.messages.conversationId);
-
-  const readMap = new Map(parts.map((p) => [p.conversationId, p.lastReadAt]));
-  let unread = 0;
-  for (const r of rows) {
-    if (!r.lastOtherMsgAt) continue;
-    const lastRead = readMap.get(r.conversationId);
-    if (!lastRead || new Date(r.lastOtherMsgAt) > lastRead) unread++;
-  }
-  return unread;
+  const [row] = await db().execute<{ n: number }>(sql`
+    select count(*)::int as n
+    from conversation_participants cp
+    where cp.user_id = ${userId}
+      and exists (
+        select 1 from messages m
+        where m.conversation_id = cp.conversation_id
+          and m.sender_id <> ${userId}
+          and (cp.last_read_at is null or m.created_at > cp.last_read_at)
+      )
+  `);
+  return row?.n ?? 0;
 }

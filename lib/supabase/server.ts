@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -28,11 +29,15 @@ export async function createClient() {
   );
 }
 
-/** Oturumdaki kullanıcıyı getirir (yoksa null). */
-export async function getUser() {
+/**
+ * Oturumdaki kullanıcıyı getirir (yoksa null).
+ * cache(): Supabase Auth'a giden ağ çağrısı istek başına 1 kez yapılır —
+ * aynı render'da kaç bileşen çağırırsa çağırsın sonuç paylaşılır.
+ */
+export const getUser = cache(async () => {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return user;
-}
+});

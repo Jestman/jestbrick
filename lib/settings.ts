@@ -1,12 +1,13 @@
 import "server-only";
+import { cache } from "react";
 import { inArray } from "drizzle-orm";
 import { db, schema } from "@/db";
 
 export type FlagKey = "market_enabled" | "forum_enabled" | "signup_enabled";
 const FLAG_KEYS: FlagKey[] = ["market_enabled", "forum_enabled", "signup_enabled"];
 
-/** Site anahtarlarını okur; kayıt yoksa güvenli varsayılan: açık. */
-export async function getFlags(): Promise<Record<FlagKey, boolean>> {
+/** Site anahtarlarını okur (istek başına 1 sorgu); kayıt yoksa güvenli varsayılan: açık. */
+export const getFlags = cache(async (): Promise<Record<FlagKey, boolean>> => {
   const rows = await db()
     .select({ key: schema.siteSettings.key, value: schema.siteSettings.value })
     .from(schema.siteSettings)
@@ -17,7 +18,7 @@ export async function getFlags(): Promise<Record<FlagKey, boolean>> {
     forum_enabled: map.forum_enabled ?? true,
     signup_enabled: map.signup_enabled ?? true,
   };
-}
+});
 
 export async function flagEnabled(key: FlagKey): Promise<boolean> {
   return (await getFlags())[key];
