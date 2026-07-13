@@ -6,14 +6,42 @@ import { toggleLike, addComment, createPost } from "@/lib/social/actions";
 import { Avatar, RoleBadge } from "@/app/components/Avatar";
 import { timeAgo } from "@/lib/format";
 import { mediaUrl } from "@/lib/media";
+import { HomeSide } from "./HomeSide";
+
+async function LandingStats() {
+  const [row] = await db()
+    .select({
+      members: sql<number>`(select count(*)::int from users)`,
+      sets: sql<number>`(select count(*)::int from sets)`,
+      listings: sql<number>`(select count(*)::int from listings where status = 'active')`,
+      figs: sql<number>`(select count(*)::int from minifigs)`,
+    })
+    .from(sql`(select 1) as one`);
+  const items: [string, string][] = [
+    [row.members.toLocaleString("tr-TR"), "koleksiyoncu"],
+    [row.sets.toLocaleString("tr-TR"), "set katalogda"],
+    [row.figs.toLocaleString("tr-TR"), "minifigür"],
+    [row.listings.toLocaleString("tr-TR"), "aktif ilan"],
+  ];
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, margin: "8px 0 34px" }}>
+      {items.map(([n, label]) => (
+        <div key={label} className="card" style={{ padding: "14px 10px", textAlign: "center" }}>
+          <b style={{ fontFamily: "var(--disp)", fontSize: 22 }}>{n}</b>
+          <div style={{ fontSize: 12.5, color: "var(--ink3)" }}>{label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function Landing() {
   return (
-    <main className="wrap" style={{ maxWidth: 720 }}>
-      <div style={{ padding: "48px 0 32px" }}>
+    <main className="wrap" style={{ maxWidth: 860 }}>
+      <div style={{ padding: "44px 0 28px", textAlign: "center" }}>
         <h1
           style={{
-            fontFamily: "var(--disp)", fontSize: "clamp(28px, 5vw, 40px)", fontWeight: 800,
+            fontFamily: "var(--disp)", fontSize: "clamp(28px, 5vw, 42px)", fontWeight: 800,
             letterSpacing: "-0.8px", lineHeight: 1.15, textWrap: "balance",
           }}
         >
@@ -21,20 +49,50 @@ function Landing() {
           <br />
           Seti olanla arayanı buluştur.
         </h1>
-        <p style={{ color: "var(--ink2)", marginTop: 14, maxWidth: "52ch", fontSize: 16 }}>
+        <p style={{ color: "var(--ink2)", margin: "14px auto 0", maxWidth: "52ch", fontSize: 16 }}>
           JestBrick, LEGO koleksiyoncularının buluşma noktası: koleksiyon vitrini, istek listesi
           eşleştirme, forum ve güvenli ikinci el pazarı — hepsi tek yerde.
         </p>
-        <div style={{ display: "flex", gap: 12, marginTop: 26, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 12, marginTop: 26, flexWrap: "wrap", justifyContent: "center" }}>
           <Link href="/kayit" className="btn btn-y">🧱 Aramıza Katıl</Link>
           <Link href="/setler" className="btn btn-o">Set Kataloğuna Göz At</Link>
         </div>
       </div>
-      {!envReady() && (
+
+      {!envReady() ? (
         <div className="notice">
           <b>Kurulum bekleniyor:</b> <code>.env.local</code> dosyası eksik — <code>README.md</code>
           &nbsp;adımlarını izle.
         </div>
+      ) : (
+        <>
+          <LandingStats />
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14, marginBottom: 34 }}>
+            {[
+              ["🧱", "Vitrinini kur", "Setlerini ve minifigürlerini katalogdan tek tıkla ekle; profilin paylaşılabilir bir koleksiyon vitrinine dönüşsün."],
+              ["🔥", "Eşleş", "İstek listeni aç — aradığın seti satan çıkınca bildirim gelir; elindekini arayanlara tek tıkla ulaş."],
+              ["🤝", "Güvenle alışveriş yap", "Koleksiyoncudan koleksiyoncuya pazar, satıcı puanlarıyla. Forumda fiyat ve emeklilik sohbetleri cabası."],
+            ].map(([icon, title, desc]) => (
+              <div key={title} className="card" style={{ padding: "18px 20px" }}>
+                <span style={{ fontSize: 26 }}>{icon}</span>
+                <b style={{ display: "block", fontFamily: "var(--disp)", fontSize: 15.5, margin: "8px 0 5px" }}>{title}</b>
+                <p style={{ fontSize: 13.5, color: "var(--ink2)", lineHeight: 1.55 }}>{desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="home-grid">
+            <div className="card" style={{ padding: "22px 26px", textAlign: "center", background: "var(--yellow-soft)", alignSelf: "stretch" }}>
+              <b style={{ fontFamily: "var(--disp)", fontSize: 17 }}>Topluluk şimdiden dönüyor 🧱</b>
+              <p style={{ fontSize: 14, color: "var(--ink2)", margin: "8px 0 14px" }}>
+                Yandakiler canlı: ilanlar, forum konuları, yeni katılanlar. Sen de yerini al.
+              </p>
+              <Link href="/kayit" className="btn btn-y">Ücretsiz Katıl</Link>
+            </div>
+            <HomeSide />
+          </div>
+        </>
       )}
     </main>
   );
@@ -55,10 +113,10 @@ function Composer({ me }: { me: { handle: string; name: string; avatar: string |
           }}
         />
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10, paddingLeft: 53 }}>
-        <label style={{ fontSize: 13, fontWeight: 600, color: "var(--ink2)", cursor: "pointer" }}>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
+        <label style={{ fontSize: 13, fontWeight: 600, color: "var(--ink2)", cursor: "pointer", flex: 1, minWidth: 200 }}>
           📷 Fotoğraf ekle (en fazla 4)
-          <input type="file" name="photos" accept="image/*" multiple style={{ display: "block", fontSize: 12, marginTop: 4 }} />
+          <input type="file" name="photos" accept="image/*" multiple style={{ display: "block", fontSize: 12, marginTop: 4, width: "100%" }} />
         </label>
         <button className="btn btn-y" type="submit" style={{ marginLeft: "auto" }}>
           Paylaş
@@ -313,15 +371,20 @@ export default async function Home() {
   const me = meRows[0] ?? { handle: "ben", name: "", avatar: null };
 
   return (
-    <main className="wrap" style={{ maxWidth: 640 }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18 }}>
-        <h1 className="page" style={{ marginBottom: 0 }}>Akış</h1>
-        <Link href="/uyeler" style={{ fontSize: 13.5, fontWeight: 600, marginLeft: "auto" }}>
-          Üyeleri keşfet →
-        </Link>
+    <main className="wrap" style={{ maxWidth: 1000 }}>
+      <div className="home-grid">
+        <div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18 }}>
+            <h1 className="page" style={{ marginBottom: 0 }}>Akış</h1>
+            <Link href="/uyeler" style={{ fontSize: 13.5, fontWeight: 600, marginLeft: "auto" }}>
+              Üyeleri keşfet →
+            </Link>
+          </div>
+          <Composer me={{ handle: me.handle, name: me.name, avatar: mediaUrl(me.avatar) }} />
+          <Feed userId={user.id} />
+        </div>
+        <HomeSide />
       </div>
-      <Composer me={{ handle: me.handle, name: me.name, avatar: mediaUrl(me.avatar) }} />
-      <Feed userId={user.id} />
     </main>
   );
 }

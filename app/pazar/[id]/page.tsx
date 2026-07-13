@@ -167,12 +167,32 @@ export default async function IlanDetayPage({
           {isOwner && (
             <div style={{ marginTop: 16, borderTop: "1px solid var(--line)", paddingTop: 14 }}>
               <b style={{ fontSize: 13.5 }}>İlan yönetimi</b>
-              <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap", alignItems: "center" }}>
                 {l.status !== "active" && <StatusBtn id={l.id} to="active" label="Tekrar Satışta" />}
                 {l.status === "active" && <StatusBtn id={l.id} to="reserved" label="Rezerve İşaretle" />}
-                {l.status !== "sold" && <StatusBtn id={l.id} to="sold" label="✓ Satıldı" primary />}
                 {l.status !== "removed" && <StatusBtn id={l.id} to="removed" label="Kaldır" />}
               </div>
+              {l.status !== "sold" && (
+                <form
+                  action={setListingStatus}
+                  style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 10, background: "var(--soft)", borderRadius: 10, padding: "10px 14px" }}
+                >
+                  <input type="hidden" name="listingId" value={l.id} />
+                  <input type="hidden" name="status" value="sold" />
+                  <label style={{ display: "flex", gap: 7, alignItems: "center", fontSize: 13, cursor: "pointer" }}>
+                    <input type="checkbox" name="via" defaultChecked />
+                    Alıcıyı JestBrick'te buldum
+                  </label>
+                  <button className="btn btn-y" type="submit" style={{ padding: "7px 14px", fontSize: 13, marginLeft: "auto" }}>
+                    ✓ Satıldı Olarak İşaretle
+                  </button>
+                </form>
+              )}
+              {l.status === "sold" && (
+                <p style={{ fontSize: 12.5, color: "var(--ink3)", marginTop: 8 }}>
+                  {l.soldViaJestbrick ? "🧱 JestBrick üzerinden satıldı olarak işaretlendi." : "Satıldı (platform dışı)."}
+                </p>
+              )}
             </div>
           )}
 

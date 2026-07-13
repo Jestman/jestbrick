@@ -89,7 +89,8 @@ export default async function MesajlarPage({
       .sort((a, b) => (b.lastAt?.getTime() ?? 0) - (a.lastAt?.getTime() ?? 0));
   }
 
-  const activeId = k && convIds.includes(k) ? k : convs[0]?.convId ?? null;
+  // Otomatik seçim yok: mobilde tek panel gösterildiğinden k'sız giriş liste ekranıdır.
+  const activeId = k && convIds.includes(k) ? k : null;
   const active = convs.find((c) => c.convId === activeId) ?? null;
 
   let msgs: { id: string; senderId: string; body: string; kind: string; createdAt: Date }[] = [];
@@ -130,8 +131,12 @@ export default async function MesajlarPage({
           <b>“isteyenler”</b> listesinden konuşma başlatabilirsin.
         </div>
       ) : (
-        <div className="card" style={{ padding: 0, display: "grid", gridTemplateColumns: "280px 1fr", overflow: "hidden", minHeight: 460 }}>
-          <div style={{ borderRight: "1px solid var(--line)", overflowY: "auto" }}>
+        <div
+          className="card chat-grid"
+          data-open={active ? "true" : "false"}
+          style={{ padding: 0, display: "grid", gridTemplateColumns: "280px 1fr", overflow: "hidden", minHeight: 460 }}
+        >
+          <div className="chat-list" style={{ borderRight: "1px solid var(--line)", overflowY: "auto" }}>
             {convs.map((c) => (
               <Link
                 key={c.convId}
@@ -164,11 +169,14 @@ export default async function MesajlarPage({
             ))}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div className="chat-pane" style={{ display: "flex", flexDirection: "column" }}>
             {active ? (
               <>
                 <LiveRefresh conversationId={active.convId} />
                 <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "13px 17px", borderBottom: "1px solid var(--line)", fontWeight: 700 }}>
+                  <Link href="/mesajlar" className="chat-back" aria-label="Konuşma listesine dön" style={{ fontSize: 18, color: "var(--ink2)", alignItems: "center" }}>
+                    ←
+                  </Link>
                   <Avatar handle={active.otherHandle} name={active.otherName} size={34} src={active.otherAvatar} />
                   <Link href={`/u/${active.otherHandle}`} style={{ color: "inherit" }}>
                     {active.otherName || active.otherHandle}

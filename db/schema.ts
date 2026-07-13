@@ -306,6 +306,7 @@ export const listings = pgTable(
     ships: boolean("ships").notNull().default(true),
     status: listingStatus("status").notNull().default("active"),
     soldAt: timestamp("sold_at", { withTimezone: true }),
+    soldViaJestbrick: boolean("sold_via_jestbrick").notNull().default(false), // yönetim ciro istatistiği
     createdAt: createdAt(),
   },
   (t) => [

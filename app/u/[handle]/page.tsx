@@ -5,8 +5,10 @@ import { db, envReady, schema } from "@/db";
 import { getUser } from "@/lib/supabase/server";
 import { follow, unfollow } from "@/lib/social/actions";
 import { Avatar, RoleBadge } from "@/app/components/Avatar";
-import { avatarHue } from "@/lib/format";
+import { avatarHue, timeAgo } from "@/lib/format";
 import { mediaUrl } from "@/lib/media";
+import { activeListings, sellerStats } from "@/lib/market/queries";
+import { getFlags } from "@/lib/settings";
 import { CopyLink } from "./CopyLink";
 
 /** Paylaşım kartları (WhatsApp/Instagram/X) için OG başlığı. */
@@ -121,6 +123,8 @@ export default async function ProfilPage({
         imagePath: schema.sets.imagePath,
         imageUrl: schema.sets.imageUrl,
         themeName: schema.themes.name,
+        condition: schema.collectionItems.condition,
+        note: schema.collectionItems.note,
       })
       .from(schema.collectionItems)
       .innerJoin(schema.sets, eq(schema.collectionItems.setNum, schema.sets.setNum))
@@ -180,6 +184,29 @@ export default async function ProfilPage({
   const totalFigs = figs.reduce((a, f) => a + f.total, 0);
   const hue = avatarHue(u.handle);
 
+  // pazar vitrini: aktif ilanlar + satıcı karnesi (yorumlu puanlar)
+  const flags = await getFlags();
+  const [myListings, sStats, ratings] = flags.market_enabled
+    ? await Promise.all([
+        activeListings({ sellerId: u.id }),
+        sellerStats(u.id),
+        db()
+          .select({
+            id: schema.sellerRatings.id,
+            score: schema.sellerRatings.score,
+            comment: schema.sellerRatings.comment,
+            createdAt: schema.sellerRatings.createdAt,
+            raterHandle: schema.users.handle,
+            raterName: schema.users.displayName,
+          })
+          .from(schema.sellerRatings)
+          .innerJoin(schema.users, eq(schema.sellerRatings.raterId, schema.users.id))
+          .where(eq(schema.sellerRatings.sellerId, u.id))
+          .orderBy(sql`${schema.sellerRatings.createdAt} desc`)
+          .limit(10),
+      ])
+    : [[], { avgScore: null, ratingCount: 0, soldCount: 0 }, []];
+
   return (
     <main className="wrap" style={{ maxWidth: 860 }}>
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
@@ -191,8 +218,11 @@ export default async function ProfilPage({
             </div>
             <div style={{ marginLeft: "auto", paddingTop: 12 }}>
               {isMe ? (
-                <span style={{ display: "inline-flex", gap: 8 }}>
+                <span style={{ display: "inline-flex", gap: 8, flexWrap: "wrap" }}>
                   <CopyLink handle={u.handle} />
+                  <a href={`/u/${u.handle}/story`} target="_blank" className="btn btn-o" title="Instagram Story görseli">
+                    📱 Story
+                  </a>
                   <Link href="/hesap/profil" className="btn btn-o">Profili Düzenle</Link>
                 </span>
               ) : viewer ? (
@@ -257,6 +287,10 @@ export default async function ProfilPage({
                   <b>{s.name}</b>
                   <small>
                     #{s.setNum.replace(/-1$/, "")} · {s.themeName ?? "—"} · {s.numParts.toLocaleString("tr-TR")} parça
+                  </small>
+                  <small style={{ display: "block", marginTop: 3 }}>
+                    {s.condition === "sealed" ? "📦 Kapalı kutu" : s.condition === "parts" ? "🧩 Parçalarına ayrık" : "🧱 Kurulu"}
+                    {s.note ? ` · ${s.note}` : ""}
                   </small>
                 </div>
               </Link>
@@ -323,6 +357,61 @@ export default async function ProfilPage({
 
       {mySets.length === 0 && figs.length === 0 && (
         <div className="notice" style={{ marginTop: 20 }}>Bu üyenin vitrini henüz boş.</div>
+      )}
+
+      {myListings.length > 0 && (
+        <>
+          <h2 style={{ fontFamily: "var(--disp)", fontSize: 18, fontWeight: 800, margin: "26px 0 12px" }}>
+            🏷️ Satıştaki İlanları ({myListings.length})
+          </h2>
+          <div className="setgrid" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
+            {myListings.map((l) => (
+              <Link key={l.id} href={`/pazar/${l.id}`} className="setcard">
+                <div className="img" style={{ height: 110 }}>
+                  {(l.imagePath ?? l.imageUrl) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={l.imagePath ?? l.imageUrl ?? ""} alt={l.setName} loading="lazy" />
+                  ) : (
+                    <span style={{ fontSize: 32 }}>🧱</span>
+                  )}
+                </div>
+                <div className="meta">
+                  <b style={{ fontSize: 13 }}>{l.setName}</b>
+                  <small>
+                    <b style={{ color: "var(--ink)" }}>{Number(l.priceTry).toLocaleString("tr-TR")} ₺</b>
+                    {l.status === "reserved" ? " · rezerve" : ""}
+                  </small>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
+
+      {(sStats.ratingCount > 0 || sStats.soldCount > 0) && (
+        <>
+          <h2 style={{ fontFamily: "var(--disp)", fontSize: 18, fontWeight: 800, margin: "26px 0 12px" }}>
+            ⭐ Satıcı Karnesi
+            {sStats.avgScore != null && (
+              <span style={{ fontSize: 14, color: "var(--ink2)", fontWeight: 600, marginLeft: 10 }}>
+                {sStats.avgScore.toFixed(1)} / 5 · {sStats.ratingCount} değerlendirme · {sStats.soldCount} satış
+              </span>
+            )}
+          </h2>
+          {ratings.length > 0 && (
+            <div className="card" style={{ padding: 0 }}>
+              {ratings.map((r) => (
+                <div key={r.id} style={{ padding: "12px 16px", borderBottom: "1px solid var(--line)", fontSize: 13.5 }}>
+                  <b>{"⭐".repeat(r.score)}</b>
+                  {r.comment && <span style={{ marginLeft: 8 }}>{r.comment}</span>}
+                  <div style={{ fontSize: 12, color: "var(--ink3)", marginTop: 2 }}>
+                    @{r.raterHandle} · {timeAgo(r.createdAt)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {!viewer && (

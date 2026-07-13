@@ -14,28 +14,74 @@ const CONDITION_TR: Record<string, string> = {
   used: "Kullanılmış",
 };
 
-export default async function PazarPage() {
+export default async function PazarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ durum?: string; sehir?: string; min?: string; max?: string; sirala?: string }>;
+}) {
   if (!envReady()) redirect("/");
   if (!(await flagEnabled("market_enabled"))) redirect("/");
-  const [user, listings] = await Promise.all([getUser(), activeListings()]);
+  const { durum, sehir, min, max, sirala } = await searchParams;
+  const [user, listings] = await Promise.all([
+    getUser(),
+    activeListings({
+      condition: durum,
+      city: sehir?.trim() || undefined,
+      minPrice: min ? Number(min) : undefined,
+      maxPrice: max ? Number(max) : undefined,
+      sort: sirala,
+    }),
+  ]);
+  const hasFilter = !!(durum || sehir || min || max || sirala);
+
+  const selStyle: React.CSSProperties = {
+    padding: "8px 10px", border: "1.5px solid var(--line)", borderRadius: 9,
+    fontSize: 13, background: "#fff",
+  };
 
   return (
     <main className="wrap">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
         <h1 className="page" style={{ marginBottom: 0 }}>Pazar</h1>
         {user && (
-          <Link href="/pazar/yeni" className="btn btn-y">
-            + İlan Ver
-          </Link>
+          <span style={{ display: "inline-flex", gap: 8 }}>
+            <Link href="/pazar/ilanlarim" className="btn btn-o">İlanlarım</Link>
+            <Link href="/pazar/yeni" className="btn btn-y">+ İlan Ver</Link>
+          </span>
         )}
       </div>
-      <p style={{ color: "var(--ink2)", fontSize: 14, margin: "8px 0 20px" }}>
+      <p style={{ color: "var(--ink2)", fontSize: 14, margin: "8px 0 14px" }}>
         Koleksiyoncudan koleksiyoncuya. İlan verince seti isteyenlere otomatik haber gider 🔔
       </p>
 
+      <form method="get" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", marginBottom: 20 }}>
+        <select name="durum" defaultValue={durum ?? ""} style={selStyle}>
+          <option value="">Durum: tümü</option>
+          <option value="sealed">Kapalı kutu</option>
+          <option value="complete">Eksiksiz</option>
+          <option value="used">Kullanılmış</option>
+        </select>
+        <input name="sehir" defaultValue={sehir ?? ""} placeholder="Şehir" style={{ ...selStyle, width: 110 }} />
+        <input name="min" type="number" min={0} defaultValue={min ?? ""} placeholder="Min ₺" style={{ ...selStyle, width: 84 }} />
+        <input name="max" type="number" min={0} defaultValue={max ?? ""} placeholder="Max ₺" style={{ ...selStyle, width: 84 }} />
+        <select name="sirala" defaultValue={sirala ?? ""} style={selStyle}>
+          <option value="">En yeni</option>
+          <option value="ucuz">Fiyat: artan</option>
+          <option value="pahali">Fiyat: azalan</option>
+        </select>
+        <button className="btn btn-o" type="submit" style={{ padding: "7px 14px", fontSize: 13 }}>
+          Filtrele
+        </button>
+        {hasFilter && (
+          <Link href="/pazar" style={{ fontSize: 12.5, fontWeight: 600 }}>✕ temizle</Link>
+        )}
+      </form>
+
       {listings.length === 0 ? (
         <div className="notice">
-          Henüz aktif ilan yok. {user ? "İlk ilanı sen ver!" : "Katıl ve ilk ilanı sen ver!"}
+          {hasFilter
+            ? "Bu filtrelere uyan ilan yok — filtreleri gevşetmeyi dene."
+            : `Henüz aktif ilan yok. ${user ? "İlk ilanı sen ver!" : "Katıl ve ilk ilanı sen ver!"}`}
         </div>
       ) : (
         <div className="setgrid">

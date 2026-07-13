@@ -304,6 +304,9 @@ drop policy if exists notifications_own_update on public.notifications;
 create policy notifications_own_update on public.notifications for update
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
+-- İlanın JestBrick üzerinden satıldığı işareti (13 Tem 2026)
+alter table public.listings add column if not exists sold_via_jestbrick boolean not null default false;
+
 -- ============ site ayarları (yönetim paneli aç-kapa anahtarları) ============
 -- Enum güncellemesi: alter type user_role add value if not exists 'moderator';
 create table if not exists public.site_settings (

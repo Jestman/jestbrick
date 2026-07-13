@@ -9,6 +9,7 @@ import { signOut } from "@/lib/auth/actions";
 import { unreadConversationCount } from "@/lib/messages/helpers";
 import { currentRole, isModerator } from "@/lib/admin/guards";
 import { getFlags } from "@/lib/settings";
+import { NavShell } from "./components/NavShell";
 
 export const metadata: Metadata = {
   title: { default: "JestBrick — LEGO Koleksiyoncu Ağı", template: "%s · JestBrick" },
@@ -80,7 +81,7 @@ async function AuthNav() {
         <NavBadge n={unreadMsgs} />
       </Link>
       <Link href="/bildirimler" title="Bildirimler" aria-label="Bildirimler">
-        🔔
+        🔔<span className="nav-label"> Bildirimler</span>
         <NavBadge n={unreadNotifs} />
       </Link>
       <Link href="/hesap/profil">Hesabım</Link>
@@ -121,14 +122,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="topbar">
           <Brand />
-          <nav>
+          <NavShell>
             <Suspense fallback={null}>
               <SectionNav />
             </Suspense>
             <Suspense fallback={null}>
               <AuthNav />
             </Suspense>
-          </nav>
+          </NavShell>
         </header>
         {children}
       </body>

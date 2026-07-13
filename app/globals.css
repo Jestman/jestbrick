@@ -267,3 +267,100 @@ h1.page {
   padding: 4px 12px;
   font-weight: 600;
 }
+
+/* Ana sayfa: akış + yan panel */
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 22px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .home-grid { grid-template-columns: minmax(0, 1fr); }
+}
+.side-block { margin-bottom: 18px; }
+.side-block h3 {
+  font-family: var(--disp);
+  font-size: 14.5px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.side-block h3 a { font-size: 12px; font-weight: 600; }
+.side-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  color: inherit;
+}
+.side-row:last-child { border-bottom: none; }
+.side-row img { border-radius: 8px; }
+
+/* ---- duyarlı tasarım (13 Tem revizyonu) ---- */
+
+/* yatay taşma sigortası: hiçbir sayfa yana kaymasın */
+html, body { overflow-x: hidden; }
+img { max-width: 100%; }
+
+.nav-burger { display: none; }
+
+@media (max-width: 860px) {
+  /* hamburger menü */
+  .nav-burger {
+    display: block;
+    margin-left: auto;
+    background: none;
+    border: 1.5px solid var(--line);
+    border-radius: 9px;
+    font-size: 18px;
+    line-height: 1;
+    padding: 7px 12px;
+    color: var(--ink);
+  }
+  .topbar nav {
+    display: none;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    padding: 8px 14px 14px;
+    box-shadow: var(--shadow);
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+  }
+  .topbar nav.nav-open { display: flex; }
+  .topbar nav a { padding: 12px 10px; font-size: 15px; }
+  .topbar nav form { padding: 8px 10px 2px; }
+  .topbar nav form button { width: 100%; }
+
+  /* genel yoğunluk */
+  .wrap { padding: 16px 14px 60px; }
+  .card { padding: 16px 16px; }
+  h1.page { font-size: 21px; }
+  .setgrid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .setcard .img { height: 115px; }
+}
+
+/* mesajlar: mobilde tek panel (liste VEYA sohbet) */
+@media (max-width: 720px) {
+  .chat-grid { grid-template-columns: 1fr !important; }
+  .chat-grid[data-open="true"] .chat-list { display: none !important; }
+  .chat-grid[data-open="false"] .chat-pane { display: none !important; }
+  .chat-back { display: inline-flex !important; }
+}
+.chat-back { display: none; }
+
+.nav-label { display: none; }
+@media (max-width: 860px) {
+  .nav-label { display: inline; }
+}

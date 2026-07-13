@@ -9,7 +9,14 @@ import {
   wishToCollection,
   addMinifig,
   removeMinifig,
+  updateCollectionItem,
 } from "@/lib/collection/actions";
+
+const CONDITION_TR: Record<string, string> = {
+  sealed: "📦 Kapalı kutu",
+  built: "🧱 Kurulu",
+  parts: "🧩 Parçalarına ayrık",
+};
 
 export const metadata = { title: "Koleksiyonum" };
 
@@ -43,6 +50,8 @@ export default async function KoleksiyonPage({
         imagePath: schema.sets.imagePath,
         imageUrl: schema.sets.imageUrl,
         themeName: schema.themes.name,
+        condition: schema.collectionItems.condition,
+        note: schema.collectionItems.note,
       })
       .from(schema.collectionItems)
       .innerJoin(schema.sets, eq(schema.collectionItems.setNum, schema.sets.setNum))
@@ -233,6 +242,27 @@ export default async function KoleksiyonPage({
                       </small>
                     </div>
                   </Link>
+                  <form action={updateCollectionItem} style={{ display: "grid", gap: 6, padding: "0 14px 8px" }}>
+                    <input type="hidden" name="setNum" value={s.setNum} />
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <select
+                        name="condition" defaultValue={s.condition}
+                        style={{ flex: 1, minWidth: 0, padding: "5px 8px", border: "1.5px solid var(--line)", borderRadius: 8, fontSize: 12.5 }}
+                      >
+                        {Object.entries(CONDITION_TR).map(([v, l]) => (
+                          <option key={v} value={v}>{l}</option>
+                        ))}
+                      </select>
+                      <button className="btn btn-o" type="submit" style={{ padding: "4px 10px", fontSize: 12 }} title="Durumu kaydet">
+                        💾
+                      </button>
+                    </div>
+                    <input
+                      name="note" defaultValue={s.note ?? ""} maxLength={200}
+                      placeholder="Not: kutu/talimat durumu…"
+                      style={{ padding: "5px 9px", border: "1.5px solid var(--line)", borderRadius: 8, fontSize: 12.5 }}
+                    />
+                  </form>
                   <form action={removeFromCollection} style={{ padding: "0 14px 12px" }}>
                     <input type="hidden" name="setNum" value={s.setNum} />
                     <button className="btn btn-o" style={{ padding: "5px 12px", fontSize: 12.5 }} type="submit">

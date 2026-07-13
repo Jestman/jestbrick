@@ -188,3 +188,21 @@ export async function wishToCollection(formData: FormData) {
   revalidatePath("/koleksiyon");
   revalidatePath("/");
 }
+
+/** Koleksiyon setinin durumunu (kapalı/kurulu/parça) ve notunu günceller. */
+export async function updateCollectionItem(formData: FormData) {
+  const setNum = String(formData.get("setNum") ?? "");
+  const condition = String(formData.get("condition") ?? "");
+  const note = String(formData.get("note") ?? "").trim().slice(0, 200) || null;
+  if (!setNum || !new Set(schema.collectionCondition.enumValues).has(condition as never)) return;
+  const user = await requireUser();
+
+  await db()
+    .update(schema.collectionItems)
+    .set({ condition: condition as (typeof schema.collectionCondition.enumValues)[number], note })
+    .where(
+      and(eq(schema.collectionItems.userId, user.id), eq(schema.collectionItems.setNum, setNum))
+    );
+
+  revalidatePath("/koleksiyon");
+}

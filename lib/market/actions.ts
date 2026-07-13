@@ -123,11 +123,14 @@ export async function setListingStatus(formData: FormData) {
     .set({
       status: status as (typeof schema.listingStatus.enumValues)[number],
       soldAt: status === "sold" ? new Date() : null,
+      // "JestBrick üzerinden sattım" işareti yalnızca satıldı anında anlamlı
+      soldViaJestbrick: status === "sold" ? formData.get("via") === "on" : false,
     })
     .where(and(eq(schema.listings.id, id), eq(schema.listings.sellerId, user.id)));
 
   revalidatePath(`/pazar/${id}`);
   revalidatePath("/pazar");
+  revalidatePath("/pazar/ilanlarim");
 }
 
 /** Alıcı → satıcı: ilan üstünden konuşma başlatır, satıcıya bildirim düşer. */

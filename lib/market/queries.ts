@@ -1,12 +1,34 @@
 import "server-only";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, lte, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 
-/** Pazar vitrini: aktif + rezerve ilanlar (satılan/kaldırılan gizli). */
-export async function activeListings(opts: { setNum?: string; sellerId?: string } = {}) {
+export type ListingFilters = {
+  setNum?: string;
+  sellerId?: string;
+  condition?: string; // sealed | complete | used
+  city?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  sort?: string; // yeni | ucuz | pahali
+};
+
+/** Pazar vitrini: aktif + rezerve ilanlar (satılan/kaldırılan gizli), filtreli. */
+export async function activeListings(opts: ListingFilters = {}) {
   const cond = [sql`${schema.listings.status} in ('active', 'reserved')`];
   if (opts.setNum) cond.push(eq(schema.listings.setNum, opts.setNum));
   if (opts.sellerId) cond.push(eq(schema.listings.sellerId, opts.sellerId));
+  if (opts.condition && schema.listingCondition.enumValues.includes(opts.condition as never))
+    cond.push(eq(schema.listings.condition, opts.condition as (typeof schema.listingCondition.enumValues)[number]));
+  if (opts.city) cond.push(ilike(schema.listings.city, `%${opts.city}%`));
+  if (opts.minPrice && Number.isFinite(opts.minPrice)) cond.push(gte(schema.listings.priceTry, String(opts.minPrice)));
+  if (opts.maxPrice && Number.isFinite(opts.maxPrice)) cond.push(lte(schema.listings.priceTry, String(opts.maxPrice)));
+
+  const order =
+    opts.sort === "ucuz"
+      ? asc(schema.listings.priceTry)
+      : opts.sort === "pahali"
+        ? desc(schema.listings.priceTry)
+        : desc(schema.listings.createdAt);
 
   return db()
     .select({
@@ -29,7 +51,7 @@ export async function activeListings(opts: { setNum?: string; sellerId?: string 
     .innerJoin(schema.sets, eq(schema.listings.setNum, schema.sets.setNum))
     .innerJoin(schema.users, eq(schema.listings.sellerId, schema.users.id))
     .where(and(...cond))
-    .orderBy(desc(schema.listings.createdAt))
+    .orderBy(order)
     .limit(60);
 }
 

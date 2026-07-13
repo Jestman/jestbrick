@@ -42,7 +42,22 @@ export default async function YonetimPage({
   const isStaff = me.role === "staff";
   const { u } = await searchParams;
 
-  const [stats, reports, flags, foundUsers] = await Promise.all([
+  // JestBrick üzerinden satış istatistikleri (satıcı beyanı: sold + sold_via_jestbrick)
+  const salesPromise = db().execute(sql`
+    select
+      count(*) filter (where sold_at > now() - interval '1 day')::int   as d1_n,
+      coalesce(sum(price_try) filter (where sold_at > now() - interval '1 day'), 0)   as d1_v,
+      count(*) filter (where sold_at > now() - interval '7 days')::int  as d7_n,
+      coalesce(sum(price_try) filter (where sold_at > now() - interval '7 days'), 0)  as d7_v,
+      count(*) filter (where sold_at > now() - interval '30 days')::int as d30_n,
+      coalesce(sum(price_try) filter (where sold_at > now() - interval '30 days'), 0) as d30_v,
+      count(*)::int as all_n,
+      coalesce(sum(price_try), 0) as all_v
+    from listings
+    where status = 'sold' and sold_via_jestbrick
+  `);
+
+  const [stats, reports, flags, foundUsers, salesRows] = await Promise.all([
     db()
       .select({
         users: sql<number>`(select count(*)::int from users)`,
@@ -81,8 +96,20 @@ export default async function YonetimPage({
           .orderBy(asc(schema.users.handle))
           .limit(10)
       : Promise.resolve([]),
+    salesPromise,
   ]);
   const s = stats[0];
+  const sales = (Array.isArray(salesRows) ? salesRows[0] : (salesRows as { rows?: unknown[] }).rows?.[0]) as
+    | Record<string, string | number>
+    | undefined;
+  const salesCells: [string, number, number][] = sales
+    ? [
+        ["Bugün", Number(sales.d1_n), Number(sales.d1_v)],
+        ["Son 7 gün", Number(sales.d7_n), Number(sales.d7_v)],
+        ["Son 30 gün", Number(sales.d30_n), Number(sales.d30_v)],
+        ["Toplam", Number(sales.all_n), Number(sales.all_v)],
+      ]
+    : [];
 
   return (
     <main className="wrap" style={{ maxWidth: 760 }}>
@@ -158,6 +185,28 @@ export default async function YonetimPage({
           </div>
         )}
       </Section>
+
+      {/* JestBrick üzerinden satışlar */}
+      {salesCells.length > 0 && (
+        <Section title="💰 JestBrick üzerinden satışlar">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 10 }}>
+            {salesCells.map(([label, n, v]) => (
+              <div key={label} className="card" style={{ padding: "14px 16px", textAlign: "center" }}>
+                <div style={{ fontSize: 12, color: "var(--ink3)", fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5 }}>
+                  {label}
+                </div>
+                <b style={{ fontFamily: "var(--disp)", fontSize: 22, display: "block", marginTop: 4 }}>
+                  {n} satış
+                </b>
+                <div style={{ fontSize: 13, color: "var(--ink2)" }}>{v.toLocaleString("tr-TR")} ₺ hacim</div>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: 12.5, color: "var(--ink3)", marginTop: 8 }}>
+            Satıcının “Alıcıyı JestBrick'te buldum” beyanına dayanır; platform dışı satışlar sayılmaz.
+          </p>
+        </Section>
+      )}
 
       {/* staff: site anahtarları */}
       {isStaff && (
