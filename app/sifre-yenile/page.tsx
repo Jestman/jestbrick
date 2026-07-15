@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { PasswordInput } from "@/app/components/PasswordInput";
 
 function YenileForm() {
   const router = useRouter();
@@ -60,11 +61,11 @@ function YenileForm() {
         <form onSubmit={submit}>
           <div className="field">
             <label htmlFor="password">Yeni şifre</label>
-            <input id="password" name="password" type="password" minLength={8} autoComplete="new-password" required />
+            <PasswordInput id="password" name="password" minLength={8} autoComplete="new-password" />
           </div>
           <div className="field">
             <label htmlFor="password2">Yeni şifre (tekrar)</label>
-            <input id="password2" name="password2" type="password" minLength={8} autoComplete="new-password" required />
+            <PasswordInput id="password2" name="password2" minLength={8} autoComplete="new-password" />
           </div>
           <button className="btn btn-y" style={{ width: "100%" }} disabled={pending}>
             {pending ? "Kaydediliyor…" : "Şifreyi Güncelle"}

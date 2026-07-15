@@ -22,6 +22,20 @@ export async function setUserRole(formData: FormData) {
   revalidatePath("/yonetim");
 }
 
+/** Hesabı askıya alır / askıyı kaldırır (sadece staff; kendine uygulanamaz). */
+export async function toggleBan(formData: FormData) {
+  const me = await requireStaff();
+  const userId = String(formData.get("userId") ?? "");
+  const to = formData.get("to") === "true";
+  if (!userId || userId === me.userId) return;
+
+  await db()
+    .update(schema.users)
+    .set({ bannedAt: to ? new Date() : null })
+    .where(eq(schema.users.id, userId));
+  revalidatePath("/yonetim");
+}
+
 export async function toggleFlag(formData: FormData) {
   await requireStaff();
   const key = String(formData.get("key") ?? "");

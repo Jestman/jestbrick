@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Link from "next/link";
 import { signIn } from "@/lib/auth/actions";
+import { PasswordInput } from "@/app/components/PasswordInput";
 
 function GirisForm() {
   const [state, action, pending] = useActionState(signIn, undefined);
@@ -22,13 +23,7 @@ function GirisForm() {
         </div>
         <div className="field">
           <label htmlFor="password">Şifre</label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-          />
+          <PasswordInput id="password" autoComplete="current-password" />
         </div>
         <button className="btn btn-y" style={{ width: "100%" }} disabled={pending}>
           {pending ? "Giriş yapılıyor…" : "Giriş Yap"}

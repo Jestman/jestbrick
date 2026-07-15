@@ -23,6 +23,9 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   if (!(await flagEnabled("signup_enabled"))) {
     return { error: "Yeni kayıtlar şu an geçici olarak kapalı. Daha sonra tekrar dene." };
   }
+  if (formData.get("terms") !== "on") {
+    return { error: "Devam etmek için Kurallar'ı ve Gizlilik Politikası'nı kabul etmelisin." };
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
@@ -46,10 +49,22 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
   const after = String(formData.get("sonra") ?? "") || "/";
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     return { error: "E-posta veya şifre hatalı." };
+  }
+
+  // askıya alınmış hesap giremez
+  if (data.user) {
+    const [row] = await db()
+      .select({ bannedAt: schema.users.bannedAt })
+      .from(schema.users)
+      .where(eq(schema.users.id, data.user.id));
+    if (row?.bannedAt) {
+      await supabase.auth.signOut();
+      return { error: "Bu hesap askıya alınmış. İtiraz için iletişim sayfasına bak." };
+    }
   }
 
   redirect(after);
@@ -68,6 +83,40 @@ export async function requestPasswordReset(
     redirectTo: "https://jestbrick.com/sifre-yenile",
   });
   return { ok: true };
+}
+
+/**
+ * Hesabı kalıcı siler: auth.users kaydı silinir, FK zinciri tüm içerikleri
+ * (koleksiyon, ilanlar, mesajlar, forum) beraberinde götürür.
+ * Onay: kullanıcı kendi kullanıcı adını yazmalı.
+ */
+export async function deleteAccount(
+  _prev: AuthState,
+  formData: FormData
+): Promise<AuthState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/giris");
+
+  const [me] = await db()
+    .select({ handle: schema.users.handle })
+    .from(schema.users)
+    .where(eq(schema.users.id, user.id));
+  const typed = String(formData.get("onay") ?? "").trim().toLowerCase();
+  if (!me || typed !== me.handle) {
+    return { error: `Onay için kullanıcı adını (${me?.handle}) aynen yazmalısın.` };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.deleteUser(user.id);
+  if (error) return { error: "Hesap silinemedi — lütfen tekrar dene." };
+  // Not: Storage'daki avatar/fotoğraf dosyaları yetim kalır; kişisel veri
+  // içermeyen medya dosyalarıdır, periyodik temizlik launch sonrası eklenecek.
+
+  await supabase.auth.signOut();
+  redirect("/?hesap=silindi");
 }
 
 export async function signOut() {

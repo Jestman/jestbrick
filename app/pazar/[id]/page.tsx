@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
 import { flagEnabled } from "@/lib/settings";
 import { getUser } from "@/lib/supabase/server";
@@ -72,13 +72,26 @@ export default async function IlanDetayPage({
   // kaldırılan ilanı sadece sahibi ve moderasyon görür
   if (l.status === "removed" && !isOwner && !canMod) notFound();
 
-  const [stats, photos] = await Promise.all([
+  const [stats, photos, pastSales] = await Promise.all([
     sellerStats(l.sellerId),
     db()
       .select({ storagePath: schema.listingImages.storagePath })
       .from(schema.listingImages)
       .where(eq(schema.listingImages.listingId, id))
       .orderBy(schema.listingImages.position),
+    // aynı setin geçmiş satışları — fiyat pusulası
+    db()
+      .select({ priceTry: schema.listings.priceTry, soldAt: schema.listings.soldAt })
+      .from(schema.listings)
+      .where(
+        and(
+          eq(schema.listings.setNum, l.setNum),
+          eq(schema.listings.status, "sold"),
+          sql`${schema.listings.id} <> ${id}`
+        )
+      )
+      .orderBy(sql`${schema.listings.soldAt} desc`)
+      .limit(3),
   ]);
   // Satıcı fotoğrafı varsa o esas; katalog görseli yedek
   const img = photos.length > 0 ? mediaUrl(photos[0].storagePath) : (row.imagePath ?? row.imageUrl);
@@ -167,6 +180,19 @@ export default async function IlanDetayPage({
               </span>
             )}
           </div>
+          {pastSales.length > 0 && (
+            <p style={{ fontSize: 12.5, color: "var(--ink3)", marginTop: 6 }}>
+              📈 Bu setin JestBrick'teki son satışları:{" "}
+              {pastSales
+                .map(
+                  (p) =>
+                    `${Number(p.priceTry).toLocaleString("tr-TR")} ₺${
+                      p.soldAt ? ` (${p.soldAt.toLocaleDateString("tr-TR", { day: "numeric", month: "short" })})` : ""
+                    }`
+                )
+                .join(" · ")}
+            </p>
+          )}
 
           <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", fontSize: 13 }}>
             <span className="chip">{CONDITION_TR[l.condition]}</span>

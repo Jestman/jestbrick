@@ -4,7 +4,7 @@ import { asc, desc, eq, ilike, isNull, sql } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
 import { requireModerator } from "@/lib/admin/guards";
 import { getFlags } from "@/lib/settings";
-import { setUserRole, toggleFlag, resolveReport } from "@/lib/admin/actions";
+import { setUserRole, toggleFlag, toggleBan, resolveReport } from "@/lib/admin/actions";
 import { timeAgo } from "@/lib/format";
 
 export const metadata = { title: "Yönetim" };
@@ -90,6 +90,7 @@ export default async function YonetimPage({
             handle: schema.users.handle,
             displayName: schema.users.displayName,
             role: schema.users.role,
+            bannedAt: schema.users.bannedAt,
           })
           .from(schema.users)
           .where(ilike(schema.users.handle, `%${u.trim()}%`))
@@ -268,6 +269,17 @@ export default async function YonetimPage({
                     </Link>{" "}
                     <span style={{ color: "var(--ink3)" }}>@{fu.handle}</span>
                   </div>
+                  <form action={toggleBan}>
+                    <input type="hidden" name="userId" value={fu.id} />
+                    <input type="hidden" name="to" value={String(!fu.bannedAt)} />
+                    <button
+                      className="btn btn-o" type="submit"
+                      style={{ padding: "6px 12px", fontSize: 12.5, color: fu.bannedAt ? "var(--green)" : "var(--red)" }}
+                      title={fu.bannedAt ? "Askıyı kaldır" : "Hesabı askıya al (giriş engellenir)"}
+                    >
+                      {fu.bannedAt ? "Askıyı Kaldır" : "🚫 Askıya Al"}
+                    </button>
+                  </form>
                   <form action={setUserRole} style={{ display: "flex", gap: 6, alignItems: "center" }}>
                     <input type="hidden" name="userId" value={fu.id} />
                     <select

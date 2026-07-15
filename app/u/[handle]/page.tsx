@@ -264,6 +264,30 @@ export default async function ProfilPage({
             <span><b style={{ color: "var(--ink)" }}>{totalParts.toLocaleString("tr-TR")}</b> parça</span>
             <span><b style={{ color: "var(--ink)" }}>{totalFigs}</b> minifigür</span>
           </div>
+
+          {/* hesaplanan rozetler — şema gerektirmez, veriden türetilir */}
+          {(() => {
+            const badges: [string, string][] = [];
+            if (u.createdAt < new Date("2026-10-01"))
+              badges.push(["🧡 Kurucu Üye", "Beta döneminde aramıza katıldı"]);
+            if (mySets.length >= 100) badges.push(["💯 100 Set Kulübü", "Koleksiyonunda 100+ set"]);
+            else if (mySets.length >= 25) badges.push(["🏗️ Usta Koleksiyoncu", "Koleksiyonunda 25+ set"]);
+            if (totalParts >= 100_000) badges.push(["🧱 Parça Milyoneri Yolunda", "100.000+ parça"]);
+            if (totalFigs >= 50) badges.push(["🧍 Minifigür Ordusu", "50+ minifigür"]);
+            if (sStats.soldCount >= 1) badges.push(["🤝 İlk Satış", "JestBrick'te satış yaptı"]);
+            if (sStats.avgScore != null && sStats.avgScore >= 4.5 && sStats.ratingCount >= 3)
+              badges.push(["⭐ Güvenilir Satıcı", "4,5+ puan, 3+ değerlendirme"]);
+            if (badges.length === 0) return null;
+            return (
+              <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+                {badges.map(([label, title]) => (
+                  <span key={label} className="chip" title={title} style={{ fontSize: 12.5, background: "var(--yellow-soft)", borderColor: "var(--yellow-d)" }}>
+                    {label}
+                  </span>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       </div>
 

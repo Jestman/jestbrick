@@ -130,6 +130,31 @@ export async function createPost(formData: FormData) {
   revalidatePath("/");
 }
 
+/** Anlık beğeni (LikeButton): revalidate yok — istemci iyimser günceller. */
+export async function toggleLikeQuiet(postId: string) {
+  if (!postId || !/^[0-9a-f-]{36}$/.test(postId)) return;
+  const user = await requireUser();
+
+  const existing = await db()
+    .select({ postId: schema.likes.postId })
+    .from(schema.likes)
+    .where(and(eq(schema.likes.postId, postId), eq(schema.likes.userId, user.id)))
+    .limit(1);
+
+  if (existing.length > 0) {
+    await db()
+      .delete(schema.likes)
+      .where(and(eq(schema.likes.postId, postId), eq(schema.likes.userId, user.id)));
+  } else {
+    await db().insert(schema.likes).values({ postId, userId: user.id }).onConflictDoNothing();
+    const [post] = await db()
+      .select({ authorId: schema.posts.authorId })
+      .from(schema.posts)
+      .where(eq(schema.posts.id, postId));
+    if (post) await notify(post.authorId, user.id, "like", { postId });
+  }
+}
+
 export async function toggleLike(formData: FormData) {
   const postId = String(formData.get("postId") ?? "");
   const back = String(formData.get("back") ?? "/");

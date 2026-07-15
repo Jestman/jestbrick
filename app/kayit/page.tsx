@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { signUp } from "@/lib/auth/actions";
+import { PasswordInput } from "@/app/components/PasswordInput";
 
 export default function KayitPage() {
   const [state, action, pending] = useActionState(signUp, undefined);
@@ -23,16 +24,15 @@ export default function KayitPage() {
           </div>
           <div className="field">
             <label htmlFor="password">Şifre</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              placeholder="en az 8 karakter"
-              required
-            />
+            <PasswordInput id="password" autoComplete="new-password" minLength={8} placeholder="en az 8 karakter" />
           </div>
+          <label style={{ display: "flex", gap: 9, alignItems: "flex-start", fontSize: 13, marginBottom: 14, cursor: "pointer", lineHeight: 1.5 }}>
+            <input type="checkbox" name="terms" required style={{ marginTop: 3 }} />
+            <span>
+              <Link href="/kurallar" target="_blank">Kurallar &amp; Kullanım Şartları</Link>'nı ve{" "}
+              <Link href="/gizlilik" target="_blank">Gizlilik Politikası</Link>'nı okudum, kabul ediyorum.
+            </span>
+          </label>
           <button className="btn btn-y" style={{ width: "100%" }} disabled={pending}>
             {pending ? "Kaydediliyor…" : "Hesap Oluştur"}
           </button>

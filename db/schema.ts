@@ -71,6 +71,7 @@ export const users = pgTable(
     avatarPath: text("avatar_path"),
     wishlistPublic: boolean("wishlist_public").notNull().default(true),
     profilePublic: boolean("profile_public").notNull().default(true), // kapalıysa profil üyelere özel
+    bannedAt: timestamp("banned_at", { withTimezone: true }), // doluysa hesap askıda (giriş engellenir)
     createdAt: createdAt(),
   },
   (t) => [uniqueIndex("users_handle_lower_idx").on(t.handle)]

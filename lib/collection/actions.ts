@@ -208,3 +208,40 @@ export async function updateCollectionItem(formData: FormData) {
 
   revalidatePath("/koleksiyon");
 }
+
+export type QuickAddState =
+  | { ok: true; setNum: string; name: string; already?: boolean }
+  | { ok: false; error: string }
+  | undefined;
+
+/** Hızlı ekleme sihirbazı: numara yaz → Enter → koleksiyona ekle. */
+export async function quickAddSet(
+  _prev: QuickAddState,
+  formData: FormData
+): Promise<QuickAddState> {
+  const raw = String(formData.get("setNum") ?? "").trim();
+  const digits = raw.replace(/[^0-9-]/g, "");
+  if (!digits) return { ok: false, error: "Set numarası gir (örn. 10281)." };
+  const setNum = digits.includes("-") ? digits : `${digits}-1`;
+  const user = await requireUser();
+
+  const [set] = await db()
+    .select({ setNum: schema.sets.setNum, name: schema.sets.name })
+    .from(schema.sets)
+    .where(eq(schema.sets.setNum, setNum));
+  if (!set) return { ok: false, error: `#${raw} katalogda bulunamadı — numarayı kontrol et.` };
+
+  const existing = await db()
+    .select({ id: schema.collectionItems.id })
+    .from(schema.collectionItems)
+    .where(
+      and(eq(schema.collectionItems.userId, user.id), eq(schema.collectionItems.setNum, setNum))
+    )
+    .limit(1);
+  if (existing.length > 0) return { ok: true, setNum, name: set.name, already: true };
+
+  await insertCollectionWithActivity(user.id, setNum);
+  revalidatePath("/koleksiyon");
+  revalidatePath("/");
+  return { ok: true, setNum, name: set.name };
+}

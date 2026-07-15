@@ -147,7 +147,10 @@ export default async function KoleksiyonPage({
 
   return (
     <main className="wrap">
-      <h1 className="page">Koleksiyonum</h1>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
+        <h1 className="page" style={{ marginBottom: 0 }}>Koleksiyonum</h1>
+        <Link href="/koleksiyon/hizli-ekle" className="btn btn-y">⚡ Hızlı Ekle</Link>
+      </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
         {[

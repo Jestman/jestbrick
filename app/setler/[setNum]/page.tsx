@@ -261,6 +261,55 @@ async function MinifigSection({ setNum }: { setNum: string }) {
   );
 }
 
+/** Bu set kimlerde var — açık profilli üyelerin herkese açık kayıtları. */
+async function OwnersSection({ setNum }: { setNum: string }) {
+  const owners = await db()
+    .select({
+      handle: schema.users.handle,
+      displayName: schema.users.displayName,
+      avatarPath: schema.users.avatarPath,
+      condition: schema.collectionItems.condition,
+    })
+    .from(schema.collectionItems)
+    .innerJoin(schema.users, eq(schema.collectionItems.userId, schema.users.id))
+    .where(
+      and(
+        eq(schema.collectionItems.setNum, setNum),
+        eq(schema.collectionItems.visibility, "public"),
+        eq(schema.users.profilePublic, true),
+        sql`${schema.users.bannedAt} is null`
+      )
+    )
+    .limit(12);
+  if (owners.length === 0) return null;
+
+  const cond: Record<string, string> = { sealed: "📦", built: "🧱", parts: "🧩" };
+  return (
+    <div style={{ marginTop: 26, borderTop: "1px solid var(--line)", paddingTop: 18 }}>
+      <h2 style={{ fontFamily: "var(--disp)", fontSize: 17, fontWeight: 800, marginBottom: 4 }}>
+        🧱 Bu set kimlerde var ({owners.length}{owners.length === 12 ? "+" : ""})
+      </h2>
+      <p style={{ color: "var(--ink2)", fontSize: 13, marginBottom: 12 }}>
+        Vitrini herkese açık üyeler — profillerine göz at, koleksiyonlarını keşfet.
+      </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        {owners.map((o) => (
+          <Link
+            key={o.handle}
+            href={`/u/${o.handle}`}
+            className="chip"
+            style={{ padding: "5px 12px 5px 5px", fontSize: 13, color: "inherit" }}
+          >
+            <Avatar handle={o.handle} name={o.displayName} size={26} src={mediaUrl(o.avatarPath)} />
+            {o.displayName || o.handle}
+            <span title="durum">{cond[o.condition] ?? ""}</span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 async function WishersSection({ setNum, setName }: { setNum: string; setName: string }) {
   const user = await getUser();
   const wishers = await wishersOf(setNum, user?.id);
@@ -442,6 +491,10 @@ export default async function SetDetayPage({
 
           <Suspense fallback={null}>
             <WishersSection setNum={setNum} setName={s.name} />
+          </Suspense>
+
+          <Suspense fallback={null}>
+            <OwnersSection setNum={setNum} />
           </Suspense>
         </div>
       </div>

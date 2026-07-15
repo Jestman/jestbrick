@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { inArray, sql } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
+import { sendWeeklyDigests } from "@/lib/digest";
 
 export const maxDuration = 60;
 
@@ -46,7 +47,13 @@ export async function GET(req: Request) {
     url = fresh.length === data.results.length && data.next ? data.next : "";
   }
 
-  if (collected.length === 0) return NextResponse.json({ ok: true, upserted: 0 });
+  // Pazartesi: haftalık özet e-postaları (Vercel hobby 2 cron sınırı — buraya kancalı)
+  let digest: { sent: number; skipped: string | null } | null = null;
+  if (new Date().getUTCDay() === 1) {
+    digest = await sendWeeklyDigests().catch((e) => ({ sent: 0, skipped: String(e) }));
+  }
+
+  if (collected.length === 0) return NextResponse.json({ ok: true, upserted: 0, digest });
 
   // bilinmeyen temalar önce eklenmeli (FK)
   const themeIds = [...new Set(collected.map((s) => s.theme_id))];
@@ -92,5 +99,5 @@ export async function GET(req: Request) {
     upserted++;
   }
 
-  return NextResponse.json({ ok: true, upserted });
+  return NextResponse.json({ ok: true, upserted, digest });
 }

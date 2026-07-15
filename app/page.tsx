@@ -2,7 +2,8 @@ import Link from "next/link";
 import { asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
 import { getUser } from "@/lib/supabase/server";
-import { toggleLike, addComment, createPost } from "@/lib/social/actions";
+import { addComment, createPost } from "@/lib/social/actions";
+import { LikeButton } from "./components/LikeButton";
 import { Avatar, RoleBadge } from "@/app/components/Avatar";
 import { timeAgo } from "@/lib/format";
 import { mediaUrl } from "@/lib/media";
@@ -293,19 +294,7 @@ async function Feed({ userId }: { userId: string }) {
             )}
 
             <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px 4px" }}>
-              <form action={toggleLike}>
-                <input type="hidden" name="postId" value={p.id} />
-                <button
-                  type="submit"
-                  style={{
-                    display: "flex", alignItems: "center", gap: 7, padding: "7px 12px", borderRadius: 9,
-                    border: "none", background: "none", fontWeight: 600, fontSize: 13.5,
-                    color: p.likedByMe ? "var(--red)" : "var(--ink2)",
-                  }}
-                >
-                  {p.likedByMe ? "❤️" : "🤍"} {p.likeCount > 0 ? p.likeCount : ""} Beğen
-                </button>
-              </form>
+              <LikeButton postId={p.id} liked={p.likedByMe} count={p.likeCount} />
               <span style={{ fontSize: 13, color: "var(--ink3)" }}>
                 {comments.length > 0 ? `${comments.length} yorum` : ""}
               </span>
@@ -365,7 +354,7 @@ async function OnboardingCard({ userId, handle }: { userId: string; handle: stri
     })
     .from(sql`(select 1) as one`);
   const steps: [boolean, string, string][] = [
-    [row.sets > 0, "İlk setini koleksiyonuna ekle", "/setler"],
+    [row.sets > 0, "İlk setini koleksiyonuna ekle (⚡ hızlı mod)", "/koleksiyon/hizli-ekle"],
     [row.wishes > 0, "İstek listene bir set koy — eşleşince haber verelim", "/setler"],
     [row.profileDone, "Profilini doldur (fotoğraf + birkaç satır)", "/hesap/profil"],
   ];

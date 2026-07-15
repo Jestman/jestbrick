@@ -5,6 +5,7 @@ import { getUser } from "@/lib/supabase/server";
 import { Avatar } from "@/app/components/Avatar";
 import { mediaUrl } from "@/lib/media";
 import { ProfilForm } from "./ProfilForm";
+import { HesapSil } from "./HesapSil";
 
 export const metadata = { title: "Profili Düzenle" };
 
@@ -36,6 +37,7 @@ export default async function ProfilDuzenlePage() {
           profilePublic: u.profilePublic,
         }}
       />
+      <HesapSil handle={u.handle} />
     </main>
   );
 }
