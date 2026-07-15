@@ -292,7 +292,8 @@ async function Uyeler({ q, filtre }: { q?: string; filtre?: string }) {
               </form>
               <form action={setUserRole} style={{ display: "flex", gap: 6, alignItems: "center" }}>
                 <input type="hidden" name="userId" value={fu.id} />
-                <select name="role" defaultValue={fu.role} style={{ padding: "6px 10px", border: "1.5px solid var(--line)", borderRadius: 8, fontSize: 13 }}>
+                {/* key=taze rol: React 19 form reset'inin eski değere döndürmesini engeller */}
+                <select key={`${fu.id}-${fu.role}`} name="role" defaultValue={fu.role} style={{ padding: "6px 10px", border: "1.5px solid var(--line)", borderRadius: 8, fontSize: 13 }}>
                   {schema.userRole.enumValues.map((r) => (
                     <option key={r} value={r}>{ROLE_TR[r]}</option>
                   ))}

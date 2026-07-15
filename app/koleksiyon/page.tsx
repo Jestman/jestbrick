@@ -4,6 +4,7 @@ import { asc, eq } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
 import { getUser } from "@/lib/supabase/server";
 import { ConfirmSubmit } from "@/app/components/ConfirmSubmit";
+import { PendingButton } from "@/app/components/PendingButton";
 import {
   removeFromCollection,
   removeFromWishlist,
@@ -249,7 +250,10 @@ export default async function KoleksiyonPage({
                   <form action={updateCollectionItem} style={{ display: "grid", gap: 6, padding: "0 14px 8px" }}>
                     <input type="hidden" name="setNum" value={s.setNum} />
                     <div style={{ display: "flex", gap: 6 }}>
+                      {/* key=taze değer: React 19 form reset'i eski defaultValue'ya
+                          döndürüyordu — key değişince select yeni değerle yeniden kurulur */}
                       <select
+                        key={`c-${s.setNum}-${s.condition}`}
                         name="condition" defaultValue={s.condition}
                         style={{ flex: 1, minWidth: 0, padding: "5px 8px", border: "1.5px solid var(--line)", borderRadius: 8, fontSize: 12.5 }}
                       >
@@ -257,11 +261,12 @@ export default async function KoleksiyonPage({
                           <option key={v} value={v}>{l}</option>
                         ))}
                       </select>
-                      <button className="btn btn-o" type="submit" style={{ padding: "4px 10px", fontSize: 12 }} title="Durumu kaydet">
+                      <PendingButton className="btn btn-o" style={{ padding: "4px 10px", fontSize: 12 }} title="Durumu kaydet" pendingText="…">
                         💾
-                      </button>
+                      </PendingButton>
                     </div>
                     <input
+                      key={`n-${s.setNum}-${s.note ?? ""}`}
                       name="note" defaultValue={s.note ?? ""} maxLength={200}
                       placeholder="Not: kutu/talimat durumu…"
                       style={{ padding: "5px 9px", border: "1.5px solid var(--line)", borderRadius: 8, fontSize: 12.5 }}

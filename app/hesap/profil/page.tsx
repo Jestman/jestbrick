@@ -27,7 +27,9 @@ export default async function ProfilDuzenlePage() {
           <span style={{ fontSize: 13, color: "var(--ink3)" }}>@{u.handle}</span>
         </div>
       </div>
+      {/* key: kayıt sonrası form taze varsayılanlarla yeniden kurulsun (React 19 reset) */}
       <ProfilForm
+        key={`${u.handle}|${u.displayName}|${u.bio}|${u.city ?? ""}|${u.wishlistPublic}|${u.profilePublic}`}
         defaults={{
           handle: u.handle,
           displayName: u.displayName,
