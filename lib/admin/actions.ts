@@ -96,6 +96,16 @@ export async function deleteTopicPost(formData: FormData) {
   if (topicId) revalidatePath(`/forum/konu/${topicId}`);
 }
 
+/** Akış paylaşımını siler (moderasyon) — cascade: medya, beğeni, yorumlar. */
+export async function deletePostAdmin(formData: FormData) {
+  await requireModerator();
+  const id = String(formData.get("postId") ?? "");
+  if (!id) return;
+  await db().delete(schema.posts).where(eq(schema.posts.id, id));
+  revalidatePath("/yonetim");
+  revalidatePath("/");
+}
+
 /* ---------------- moderasyon: pazar ---------------- */
 
 export async function removeListingAdmin(formData: FormData) {
