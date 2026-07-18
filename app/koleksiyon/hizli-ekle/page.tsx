@@ -32,7 +32,7 @@ export default function HizliEklePage() {
   }, [state]);
 
   return (
-    <main className="wrap" style={{ maxWidth: 520 }}>
+    <main className="wrap" style={{ maxWidth: 560 }}>
       <Link href="/koleksiyon" style={{ fontSize: 13.5, fontWeight: 600 }}>← Koleksiyonuma dön</Link>
       <h1 className="page" style={{ marginTop: 10 }}>⚡ Hızlı Ekleme</h1>
       <p style={{ fontSize: 14, color: "var(--ink2)", marginBottom: 16 }}>

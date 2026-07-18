@@ -44,7 +44,7 @@ export default async function BildirimlerPage() {
     .where(and(eq(schema.notifications.userId, user.id), isNull(schema.notifications.readAt)));
 
   return (
-    <main className="wrap" style={{ maxWidth: 620 }}>
+    <main className="wrap" style={{ maxWidth: 560 }}>
       <h1 className="page">Bildirimler</h1>
       {items.length === 0 ? (
         <div className="notice">Henüz bildirimin yok. Takipçiler ve etkileşimler burada görünecek.</div>

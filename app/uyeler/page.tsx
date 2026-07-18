@@ -42,7 +42,7 @@ export default async function UyelerPage() {
     .limit(60);
 
   return (
-    <main className="wrap" style={{ maxWidth: 680 }}>
+    <main className="wrap" style={{ maxWidth: 820 }}>
       <h1 className="page">Üyeler</h1>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {members.map((m) => (

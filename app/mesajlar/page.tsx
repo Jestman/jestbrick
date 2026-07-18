@@ -124,7 +124,7 @@ export default async function MesajlarPage({
   }
 
   return (
-    <main className="wrap" style={{ maxWidth: 900 }}>
+    <main className="wrap" style={{ maxWidth: 980 }}>
       <h1 className="page">Mesajlar</h1>
       {convs.length === 0 ? (
         <div className="notice">

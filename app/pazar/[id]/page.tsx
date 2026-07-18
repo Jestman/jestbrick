@@ -129,7 +129,7 @@ export default async function IlanDetayPage({
   };
 
   return (
-    <main className="wrap" style={{ maxWidth: 720 }}>
+    <main className="wrap" style={{ maxWidth: 820 }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Link href="/pazar" style={{ fontSize: 13.5, fontWeight: 600 }}>← Pazara dön</Link>
 

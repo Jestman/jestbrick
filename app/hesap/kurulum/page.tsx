@@ -7,7 +7,7 @@ export default function KurulumPage() {
   const [state, action, pending] = useActionState(claimHandle, undefined);
 
   return (
-    <main className="wrap" style={{ maxWidth: 480 }}>
+    <main className="wrap" style={{ maxWidth: 440 }}>
       <h1 className="page">Profilini kur</h1>
       <p style={{ color: "var(--ink2)", marginBottom: 18, fontSize: 14 }}>
         Kullanıcı adın profil adresin olur: <code>jestbrick.com/u/kullaniciadi</code>

@@ -39,7 +39,7 @@ async function LandingStats() {
 
 function Landing() {
   return (
-    <main className="wrap" style={{ maxWidth: 860 }}>
+    <main className="wrap" style={{ maxWidth: 980 }}>
       <div style={{ padding: "44px 0 28px", textAlign: "center" }}>
         <h1
           style={{
@@ -404,7 +404,7 @@ export default async function Home() {
   const me = meRows[0] ?? { handle: "ben", name: "", avatar: null };
 
   return (
-    <main className="wrap" style={{ maxWidth: 1000 }}>
+    <main className="wrap" style={{ maxWidth: 980 }}>
       <div className="home-grid">
         <div>
           <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 18 }}>

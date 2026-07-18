@@ -433,7 +433,7 @@ export default async function SetDetayPage({
   };
 
   return (
-    <main className="wrap" style={{ maxWidth: 760 }}>
+    <main className="wrap" style={{ maxWidth: 820 }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Link href="/setler" style={{ fontSize: 13.5, fontWeight: 600 }}>
         ← Kataloğa dön

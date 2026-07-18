@@ -5,7 +5,7 @@ export const metadata = {
 
 export default function IletisimPage() {
   return (
-    <main className="wrap" style={{ maxWidth: 640 }}>
+    <main className="wrap" style={{ maxWidth: 680 }}>
       <h1 className="page">İletişim</h1>
       <div className="card" style={{ fontSize: 14.5, lineHeight: 1.7, display: "grid", gap: 14 }}>
         <p>

@@ -649,3 +649,7 @@ body > main { min-width: 0; width: 100%; }
 }
 
 .logo:hover { text-decoration: none; }
+
+/* Kaydırma çubuğu belirip kaybolunca içerik yana oynamasın:
+   çubuk alanı her zaman rezerve edilir (klasik çubuklu sistemlerde şart) */
+html { scrollbar-gutter: stable; }

@@ -44,7 +44,7 @@ export default async function IlanlarimPage() {
     .reduce((a, r) => a + Number(r.priceTry), 0);
 
   return (
-    <main className="wrap" style={{ maxWidth: 720 }}>
+    <main className="wrap" style={{ maxWidth: 820 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 16 }}>
         <h1 className="page" style={{ marginBottom: 0 }}>İlanlarım</h1>
         <Link href="/pazar/yeni" className="btn btn-y">+ İlan Ver</Link>

@@ -208,7 +208,7 @@ export default async function ProfilPage({
     : [[], { avgScore: null, ratingCount: 0, soldCount: 0 }, []];
 
   return (
-    <main className="wrap" style={{ maxWidth: 860 }}>
+    <main className="wrap" style={{ maxWidth: 820 }}>
       <div className="card" style={{ padding: 0, overflow: "hidden" }}>
         <div className="studs" style={{ height: 120, background: `linear-gradient(120deg, hsl(${hue}, 45%, 30%), var(--ink))` }} />
         <div style={{ padding: "0 24px 22px" }}>

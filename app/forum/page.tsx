@@ -67,7 +67,7 @@ export default async function ForumPage({
     .limit(40);
 
   return (
-    <main className="wrap" style={{ maxWidth: 920 }}>
+    <main className="wrap" style={{ maxWidth: 980 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10, marginBottom: 18 }}>
         <div>
           <h1 className="page" style={{ marginBottom: 2 }}>Forum</h1>

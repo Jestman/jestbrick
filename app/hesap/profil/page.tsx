@@ -19,7 +19,7 @@ export default async function ProfilDuzenlePage() {
   if (!u) redirect("/hesap/kurulum");
 
   return (
-    <main className="wrap" style={{ maxWidth: 520 }}>
+    <main className="wrap" style={{ maxWidth: 560 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 18 }}>
         <Avatar handle={u.handle} name={u.displayName} size={56} src={mediaUrl(u.avatarPath)} />
         <div>
