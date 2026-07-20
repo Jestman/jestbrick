@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { db, schema } from "@/db";
 import { flagEnabled } from "@/lib/settings";
+import { clientIp, rateLimit, RATE_MSG } from "@/lib/rate-limit";
 
 export type AuthState = { error?: string } | undefined;
 
@@ -16,6 +17,18 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const displayName = String(formData.get("displayName") ?? "").trim();
+
+  // Bot koruması: gizli tuzak alanı dolduysa ya da form insanüstü hızda
+  // gönderildiyse (3 sn altı) gerçek sebep söylenmeden reddedilir.
+  const honeypot = String(formData.get("website") ?? "");
+  const startedAt = Number(formData.get("ft"));
+  const elapsed = Date.now() - startedAt;
+  if (honeypot || !Number.isFinite(startedAt) || elapsed < 3000 || elapsed > 86_400_000) {
+    return { error: "Bir şeyler ters gitti — sayfayı yenileyip tekrar dene." };
+  }
+  if (!(await rateLimit(`kayit:${await clientIp()}`, 5, 3600))) {
+    return { error: RATE_MSG };
+  }
 
   if (!email || password.length < 8) {
     return { error: "Geçerli bir e-posta ve en az 8 karakterli bir şifre gerekli." };
@@ -48,6 +61,11 @@ export async function signIn(_prev: AuthState, formData: FormData): Promise<Auth
   const password = String(formData.get("password") ?? "");
   const after = String(formData.get("sonra") ?? "") || "/";
 
+  // Şifre deneme saldırısına karşı IP başına limit
+  if (!(await rateLimit(`giris:${await clientIp()}`, 20, 900))) {
+    return { error: RATE_MSG };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
@@ -77,6 +95,9 @@ export async function requestPasswordReset(
 ): Promise<AuthState & { ok?: boolean }> {
   const email = String(formData.get("email") ?? "").trim();
   if (!email.includes("@")) return { error: "Geçerli bir e-posta gir." };
+  if (!(await rateLimit(`sifre:${await clientIp()}`, 5, 900))) {
+    return { error: RATE_MSG };
+  }
 
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(email, {

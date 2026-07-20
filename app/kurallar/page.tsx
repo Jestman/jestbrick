@@ -17,7 +17,7 @@ export default function KurallarPage() {
       <h1 className="page">Kurallar &amp; Kullanım Şartları</h1>
       <div className="card" style={{ fontSize: 14, lineHeight: 1.7, display: "grid", gap: 12 }}>
         <p style={{ fontSize: 12.5, color: "var(--ink3)" }}>
-          Son güncelleme: 13 Temmuz 2026 · Beta sürümü — bu metin launch öncesi güncellenebilir.
+          Son güncelleme: 20 Temmuz 2026 · Beta sürümü.
         </p>
 
         <H>1. Genel</H>
@@ -32,6 +32,7 @@ export default function KurallarPage() {
           <li>Spam, yanıltıcı içerik ve izinsiz reklam yasaktır.</li>
           <li>Paylaştığın fotoğraf ve metinlerin haklarına sahip olmalısın.</li>
           <li>Kural ihlalleri moderasyon tarafından içerik silme, kısıtlama ya da hesap kapatma ile sonuçlanabilir.</li>
+          <li>Moderasyon kararlarına <a href="/iletisim">iletişim</a> sayfasındaki kanallardan itiraz edebilirsin.</li>
         </ul>
 
         <H>3. Pazar ilkeleri</H>
@@ -41,6 +42,7 @@ export default function KurallarPage() {
             arasındadır. Platform ödeme almaz, emanet (escrow) hizmeti sunmaz ve işlemlerden
             sorumlu tutulamaz.
           </li>
+          <li>Pazar'da ilan verebilmek ve alışveriş yapabilmek için 18 yaşından büyük olmalısın (ya da işlemi bir velin yürütmelidir).</li>
           <li>İlanlar gerçek, elinde mevcut ürünler için verilmelidir; sahte/kaçak ürün satışı yasaktır.</li>
           <li>Satıcı puanları gerçek deneyime dayanmalıdır; puan manipülasyonu hesap kapatma sebebidir.</li>
           <li>Güvenli alışveriş için: buluşarak teslimatı tercih et, kargoda ödeme öncesi görüntülü doğrulama iste, satıcı puanlarını incele.</li>

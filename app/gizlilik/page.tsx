@@ -17,7 +17,14 @@ export default function GizlilikPage() {
       <h1 className="page">Gizlilik Politikası</h1>
       <div className="card" style={{ fontSize: 14, lineHeight: 1.7, display: "grid", gap: 12 }}>
         <p style={{ fontSize: 12.5, color: "var(--ink3)" }}>
-          Son güncelleme: 13 Temmuz 2026 · Beta sürümü — bu metin launch öncesi güncellenebilir.
+          Son güncelleme: 20 Temmuz 2026 · Beta sürümü.
+        </p>
+
+        <H>Veri sorumlusu</H>
+        <p>
+          JestBrick, içerik üreticisi <b>Jestman</b> tarafından işletilen bağımsız bir topluluk
+          platformudur. 6698 sayılı KVKK kapsamındaki başvurularını{" "}
+          <a href="/iletisim">iletişim</a> sayfasındaki kanallardan iletebilirsin.
         </p>
 
         <H>Hangi verileri topluyoruz?</H>
@@ -50,9 +57,10 @@ export default function GizlilikPage() {
 
         <H>Saklama ve altyapı</H>
         <p>
-          Veriler, erişim kontrolü (satır düzeyi güvenlik) uygulanan Supabase altyapısında (AB
-          bölgesi) saklanır. Hesabını sildirmek istediğinde tüm kişisel verilerin ve içeriklerin
-          kalıcı olarak silinir.
+          Veriler, erişim kontrolü (satır düzeyi güvenlik) uygulanan <b>Supabase</b> altyapısında
+          (AB bölgesi — Frankfurt) saklanır; site <b>Vercel</b> üzerinde barındırılır. Bu
+          sağlayıcılar veriyi yalnızca platformun çalışması için işler. Hesabını sildirmek
+          istediğinde tüm kişisel verilerin ve içeriklerin kalıcı olarak silinir.
         </p>
 
         <H>KVKK hakların</H>

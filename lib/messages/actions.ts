@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { db, schema } from "@/db";
 import { findOrCreateDirect } from "./helpers";
+import { rateLimit } from "@/lib/rate-limit";
 
 async function requireUser() {
   const supabase = await createClient();
@@ -23,6 +24,7 @@ export async function startConversation(formData: FormData) {
   if (!otherId) return;
   const user = await requireUser();
   if (otherId === user.id) return;
+  if (!(await rateLimit(`msg:${user.id}`, 30, 300))) return;
 
   const convId = await findOrCreateDirect(user.id, otherId);
   if (text) {
@@ -41,6 +43,7 @@ export async function sendMessage(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim().slice(0, 2000);
   if (!convId || !body) return;
   const user = await requireUser();
+  if (!(await rateLimit(`msg:${user.id}`, 30, 300))) return;
 
   // katılımcı mı?
   const member = await db()

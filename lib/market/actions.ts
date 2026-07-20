@@ -8,6 +8,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { db, schema } from "@/db";
 import { findOrCreateDirect } from "@/lib/messages/helpers";
 import { notify } from "@/lib/notify";
+import { rateLimit, RATE_MSG } from "@/lib/rate-limit";
 
 const MAX_PRICE = 1_000_000;
 const CONDITIONS = new Set(schema.listingCondition.enumValues);
@@ -31,6 +32,7 @@ export async function createListing(
   formData: FormData
 ): Promise<ListingFormState> {
   const user = await requireUser();
+  if (!(await rateLimit(`ilan:${user.id}`, 10, 3600))) return { error: RATE_MSG };
 
   const setNum = String(formData.get("setNum") ?? "");
   const price = Number(formData.get("price"));
@@ -138,6 +140,7 @@ export async function contactSeller(formData: FormData) {
   const listingId = String(formData.get("listingId") ?? "");
   if (!listingId) return;
   const user = await requireUser();
+  if (!(await rateLimit(`msg:${user.id}`, 30, 300))) return;
 
   const [l] = await db()
     .select({

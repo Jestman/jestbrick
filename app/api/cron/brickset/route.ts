@@ -21,6 +21,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "ortam eksik" }, { status: 500 });
   }
 
+  // rate-limit sayaçlarının süresi geçen satırlarını temizle (günlük bakım)
+  await db().execute(sql`delete from public.rate_limits where resets_at < now()`);
+
   const since = new Date(Date.now() - 3 * 86400_000).toISOString().slice(0, 10);
   let page = 1;
   let updated = 0;

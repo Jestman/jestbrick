@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { db, schema } from "@/db";
+import { rateLimit } from "@/lib/rate-limit";
 
 const MAX_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
@@ -44,6 +45,7 @@ export async function follow(formData: FormData) {
   if (!followeeId) return;
   const user = await requireUser();
   if (user.id === followeeId) return;
+  if (!(await rateLimit(`takip:${user.id}`, 100, 3600))) return;
 
   const inserted = await db()
     .insert(schema.follows)
@@ -80,6 +82,7 @@ export async function addComment(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim();
   if (!postId || !body || body.length > 1000) return;
   const user = await requireUser();
+  if (!(await rateLimit(`yorum:${user.id}`, 30, 600))) return;
 
   await db().insert(schema.comments).values({ postId, authorId: user.id, body });
   const [post] = await db()
@@ -93,6 +96,7 @@ export async function addComment(formData: FormData) {
 /** Fotoğraflı / metinli paylaşım oluşturur; görseller Storage'a yüklenir. */
 export async function createPost(formData: FormData) {
   const user = await requireUser();
+  if (!(await rateLimit(`post:${user.id}`, 10, 3600))) return;
   const body = String(formData.get("body") ?? "").trim().slice(0, 2000);
   const files = formData
     .getAll("photos")
@@ -134,6 +138,8 @@ export async function createPost(formData: FormData) {
 export async function toggleLikeQuiet(postId: string) {
   if (!postId || !/^[0-9a-f-]{36}$/.test(postId)) return;
   const user = await requireUser();
+  // beğen/geri al döngüsüyle bildirim spam'ini keser
+  if (!(await rateLimit(`begeni:${user.id}`, 60, 300))) return;
 
   const existing = await db()
     .select({ postId: schema.likes.postId })

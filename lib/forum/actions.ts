@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { db, schema } from "@/db";
 import { notify } from "@/lib/notify";
+import { rateLimit, RATE_MSG } from "@/lib/rate-limit";
 
 const MAX_PHOTOS = 4;
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
@@ -53,6 +54,7 @@ export async function createTopic(
   formData: FormData
 ): Promise<TopicFormState> {
   const user = await requireUser();
+  if (!(await rateLimit(`konu:${user.id}`, 5, 3600))) return { error: RATE_MSG };
 
   const categoryId = Number(formData.get("categoryId"));
   const title = String(formData.get("title") ?? "").trim().slice(0, 140);
@@ -87,6 +89,7 @@ export async function replyTopic(formData: FormData) {
   const body = String(formData.get("body") ?? "").trim().slice(0, 10_000);
   if (!topicId || body.length < 2) return;
   const user = await requireUser();
+  if (!(await rateLimit(`yanit:${user.id}`, 20, 600))) return;
 
   const [topic] = await db()
     .select({

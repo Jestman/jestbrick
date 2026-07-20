@@ -1,12 +1,15 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { signUp } from "@/lib/auth/actions";
 import { PasswordInput } from "@/app/components/PasswordInput";
 
 export default function KayitPage() {
   const [state, action, pending] = useActionState(signUp, undefined);
+  // bot koruması: formun açılış anı (sunucu 3 sn altındaki gönderimi reddeder)
+  const [ft, setFt] = useState("");
+  useEffect(() => setFt(String(Date.now())), []);
 
   return (
     <main className="wrap" style={{ maxWidth: 440 }}>
@@ -14,6 +17,16 @@ export default function KayitPage() {
       <div className="card">
         {state?.error && <div className="error">{state.error}</div>}
         <form action={action}>
+          <input type="hidden" name="ft" value={ft} />
+          {/* tuzak alan: insanlar görmez, botlar doldurur */}
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            style={{ position: "absolute", left: -9999, width: 1, height: 1, opacity: 0 }}
+          />
           <div className="field">
             <label htmlFor="displayName">Görünen ad</label>
             <input id="displayName" name="displayName" placeholder="örn. Ali Yıldız" required />

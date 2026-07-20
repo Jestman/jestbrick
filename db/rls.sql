@@ -345,6 +345,38 @@ begin
   end if;
 end $$;
 
+-- ============ Güvenlik turu (20 Tem 2026) ============
+
+-- 1) DM AÇIĞI KAPATILDI: eski participants_insert politikası "or auth.uid() = user_id"
+--    içerdiğinden her üye kendini HERHANGİ bir konuşmaya ekleyip mesajları okuyabilirdi.
+--    Konuşma/katılımcı yazımı yalnızca sunucudan (drizzle, RLS'e takılmaz) yapılıyor →
+--    istemci politikaları tamamen kaldırıldı.
+drop policy if exists conversations_insert on public.conversations;
+drop policy if exists participants_insert on public.conversation_participants;
+
+-- 2) Forum başlıkları: sahibi yalnızca başlık metnini düzenleyebilir;
+--    pinned/locked sütunları API üzerinden değiştirilemez (moderasyon sunucudan yapar).
+revoke update on public.topics from authenticated, anon;
+grant update (title) on public.topics to authenticated;
+
+-- 3) Minifig vitrini artık profil gizliliğine uyar: kapalı profillerin
+--    minifigleri üye olmayanlara (anon) görünmez.
+drop policy if exists collection_minifigs_read on public.collection_minifigs;
+create policy collection_minifigs_read on public.collection_minifigs for select
+  using (
+    auth.uid() is not null -- üyeler görür (kapalı profil kapısı üyelere kapanmaz)
+    or exists (select 1 from public.users u where u.id = user_id and u.profile_public)
+  );
+
+-- 4) Rate-limit sayaç tablosu — yalnızca sunucu yazar/okur; RLS açık, politika yok
+--    (anon/authenticated hiçbir şekilde erişemez). Süresi geçen satırları günlük cron siler.
+create table if not exists public.rate_limits (
+  bucket text primary key,
+  count integer not null default 1,
+  resets_at timestamptz not null
+);
+alter table public.rate_limits enable row level security;
+
 -- ============ başlangıç verisi: forum kategorileri ============
 insert into public.forum_categories (id, name, slug, icon, description, position) values
   (1, 'Yeni Setler & Söylentiler', 'yeni-setler', '🆕', 'Duyurular, sızıntılar, beklenen setler', 1),
