@@ -167,7 +167,7 @@ async function SetResults({ f, page }: { f: Filters; page: number }) {
                     <input type="hidden" name="setNum" value={s.setNum} />
                     <input type="hidden" name="back" value="/setler" />
                     <PendingButton className="btn btn-o" style={{ padding: "4px 12px", fontSize: 12.5 }} pendingText="Ekleniyor…">
-                      + Koleksiyona
+                      + Ekle
                     </PendingButton>
                   </form>
                 )}

@@ -261,36 +261,46 @@ async function MinifigSection({ setNum }: { setNum: string }) {
   );
 }
 
-/** Bu set kimlerde var — açık profilli üyelerin herkese açık kayıtları. */
+/** Bu set kimlerde var — açık profilli üyelerin herkese açık kayıtları.
+ * Gerçek toplam sayı gösterilir; liste rastgele 10 üyeyle sınırlıdır
+ * (herkese eşit görünürlük, kalabalık setlerde sayfa şişmez). */
 async function OwnersSection({ setNum }: { setNum: string }) {
-  const owners = await db()
-    .select({
-      handle: schema.users.handle,
-      displayName: schema.users.displayName,
-      avatarPath: schema.users.avatarPath,
-      condition: schema.collectionItems.condition,
-    })
-    .from(schema.collectionItems)
-    .innerJoin(schema.users, eq(schema.collectionItems.userId, schema.users.id))
-    .where(
-      and(
-        eq(schema.collectionItems.setNum, setNum),
-        eq(schema.collectionItems.visibility, "public"),
-        eq(schema.users.profilePublic, true),
-        sql`${schema.users.bannedAt} is null`
-      )
-    )
-    .limit(12);
+  const ownerFilter = and(
+    eq(schema.collectionItems.setNum, setNum),
+    eq(schema.collectionItems.visibility, "public"),
+    eq(schema.users.profilePublic, true),
+    sql`${schema.users.bannedAt} is null`
+  );
+  const [owners, [{ total }]] = await Promise.all([
+    db()
+      .select({
+        handle: schema.users.handle,
+        displayName: schema.users.displayName,
+        avatarPath: schema.users.avatarPath,
+        condition: schema.collectionItems.condition,
+      })
+      .from(schema.collectionItems)
+      .innerJoin(schema.users, eq(schema.collectionItems.userId, schema.users.id))
+      .where(ownerFilter)
+      .orderBy(sql`random()`)
+      .limit(10),
+    db()
+      .select({ total: sql<number>`count(*)::int` })
+      .from(schema.collectionItems)
+      .innerJoin(schema.users, eq(schema.collectionItems.userId, schema.users.id))
+      .where(ownerFilter),
+  ]);
   if (owners.length === 0) return null;
 
   const cond: Record<string, string> = { sealed: "📦", built: "🧱", parts: "🧩" };
   return (
     <div style={{ marginTop: 26, borderTop: "1px solid var(--line)", paddingTop: 18 }}>
       <h2 style={{ fontFamily: "var(--disp)", fontSize: 17, fontWeight: 800, marginBottom: 4 }}>
-        🧱 Bu set kimlerde var ({owners.length}{owners.length === 12 ? "+" : ""})
+        🧱 Bu set kimlerde var ({total})
       </h2>
       <p style={{ color: "var(--ink2)", fontSize: 13, marginBottom: 12 }}>
         Vitrini herkese açık üyeler — profillerine göz at, koleksiyonlarını keşfet.
+        {total > 10 && " Her ziyarette rastgele 10 üye gösterilir."}
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
         {owners.map((o) => (

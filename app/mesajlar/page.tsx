@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 import { and, asc, desc, eq, inArray, ne, sql } from "drizzle-orm";
 import { db, envReady, schema } from "@/db";
 import { getUser } from "@/lib/supabase/server";
-import { sendMessage } from "@/lib/messages/actions";
+import { deleteMessage, sendMessage } from "@/lib/messages/actions";
 import { Avatar } from "@/app/components/Avatar";
+import { ConfirmSubmit } from "@/app/components/ConfirmSubmit";
 import { PendingButton } from "@/app/components/PendingButton";
 import { mediaUrl } from "@/lib/media";
 import { timeAgo } from "@/lib/format";
@@ -127,9 +128,20 @@ export default async function MesajlarPage({
     <main className="wrap" style={{ maxWidth: 980 }}>
       <h1 className="page">Mesajlar</h1>
       {convs.length === 0 ? (
-        <div className="notice">
-          Henüz mesajın yok. Bir üyenin profilinden ya da set sayfasındaki{" "}
-          <b>“isteyenler”</b> listesinden konuşma başlatabilirsin.
+        <div className="card" style={{ textAlign: "center", padding: "52px 24px" }}>
+          <div style={{ fontSize: 46, marginBottom: 12 }} aria-hidden>💬</div>
+          <h2 style={{ fontFamily: "var(--disp)", fontSize: 18, fontWeight: 800, marginBottom: 6 }}>
+            Henüz mesajın yok
+          </h2>
+          <p style={{ color: "var(--ink2)", fontSize: 14, lineHeight: 1.65, maxWidth: 420, margin: "0 auto 20px" }}>
+            Bir üyenin profilinden konuşma başlatabilir, set sayfalarındaki{" "}
+            <b>“isteyenler”</b> listesinden koleksiyonculara ulaşabilir ya da bir ilanın
+            satıcısına yazabilirsin.
+          </p>
+          <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
+            <Link href="/uyeler" className="btn btn-y">Üyelere göz at</Link>
+            <Link href="/pazar" className="btn btn-o">Pazar'ı keşfet</Link>
+          </div>
         </div>
       ) : (
         <div
@@ -208,10 +220,25 @@ export default async function MesajlarPage({
                           </div>
                         )}
                         {m.body}
-                        <div style={{ fontSize: 10.5, color: "var(--ink3)", marginTop: 3 }}>{timeAgo(m.createdAt)}</div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 10.5, color: "var(--ink3)", marginTop: 3 }}>
+                          {timeAgo(m.createdAt)}
+                          {mine && (
+                            <form action={deleteMessage} style={{ display: "inline-flex" }}>
+                              <input type="hidden" name="messageId" value={m.id} />
+                              <ConfirmSubmit className="msg-del" confirmText="Sil?" title="Mesajı sil (iki taraftan da kalkar)">
+                                🗑
+                              </ConfirmSubmit>
+                            </form>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
+                  {msgs.length === 0 && (
+                    <div style={{ margin: "auto", textAlign: "center", color: "var(--ink3)", fontSize: 13.5 }}>
+                      Henüz mesaj yok — ilk mesajı sen yaz 👋
+                    </div>
+                  )}
                 </div>
                 <form action={sendMessage} style={{ display: "flex", gap: 9, padding: "13px 15px", borderTop: "1px solid var(--line)" }}>
                   <input type="hidden" name="conversationId" value={active.convId} />
@@ -226,7 +253,10 @@ export default async function MesajlarPage({
                 </form>
               </>
             ) : (
-              <div className="empty" style={{ margin: "auto", color: "var(--ink3)" }}>Bir konuşma seç</div>
+              <div style={{ margin: "auto", textAlign: "center", color: "var(--ink3)", padding: 24 }}>
+                <div style={{ fontSize: 34, marginBottom: 8 }} aria-hidden>💬</div>
+                <div style={{ fontSize: 14 }}>Soldaki listeden bir konuşma seç</div>
+              </div>
             )}
           </div>
         </div>

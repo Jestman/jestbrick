@@ -77,3 +77,16 @@ export async function sendMessage(formData: FormData) {
   revalidatePath("/mesajlar");
 }
 
+/** Kendi mesajını siler (iki taraftan da kalkar — "geri al" davranışı). */
+export async function deleteMessage(formData: FormData) {
+  const messageId = String(formData.get("messageId") ?? "");
+  if (!/^[0-9a-f-]{36}$/.test(messageId)) return;
+  const user = await requireUser();
+
+  await db()
+    .delete(schema.messages)
+    .where(and(eq(schema.messages.id, messageId), eq(schema.messages.senderId, user.id)));
+
+  revalidatePath("/mesajlar");
+}
+

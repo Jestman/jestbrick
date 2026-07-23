@@ -17,6 +17,7 @@ import { timeAgo } from "@/lib/format";
 import { NavShell } from "./components/NavShell";
 import { SearchBox } from "./components/SearchBox";
 import { ImgFallback } from "./components/ImgFallback";
+import { DropdownCloser } from "./components/DropdownCloser";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://jestbrick.com"),
@@ -203,6 +204,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="tr">
       <body>
+        <DropdownCloser />
         <header className="topbar">
           <Brand />
           <SearchBox className="nav-search" />
